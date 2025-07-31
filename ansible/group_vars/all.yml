@@ -40,9 +40,6 @@ dotfiles:
   - src: vimrc
     dest: .vimrc
     mode: "0644"
-  - src: screenrc
-    dest: .screenrc
-    mode: "0644"
 
 # Git configuration settings (managed separately to preserve user settings)
 git_config:
