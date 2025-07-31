@@ -25,12 +25,22 @@
     mode: "0755"
   when: not cursor_installed.stat.exists
 
+- name: Get Cursor download URL from API
+  ansible.builtin.uri:
+    url: "{{ cursor_api_url }}"
+    method: GET
+    return_content: true
+  register: cursor_api_response
+  when: not cursor_installed.stat.exists
+
 - name: Download Cursor AppImage
   ansible.builtin.get_url:
-    url: "{{ cursor_download_url }}"
+    url: "{{ cursor_api_response.json.downloadUrl }}"
     dest: "{{ cursor_install_dir }}/cursor.AppImage"
     mode: "0755"
     timeout: 300
+    headers:
+      User-Agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
   when: not cursor_installed.stat.exists
   register: cursor_download
 

@@ -18,7 +18,7 @@ essential_packages:
 # Cursor installation
 cursor_version: "latest"
 cursor_install_method: "appimage"  # Options: appimage, package
-cursor_download_url: "https://downloader.cursor.sh/linux/appImage/x64"
+cursor_api_url: "https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=stable"
 cursor_install_dir: "/opt/cursor"
 cursor_desktop_file: "/usr/share/applications/cursor.desktop"
 
