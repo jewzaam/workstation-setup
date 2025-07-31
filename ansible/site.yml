@@ -6,7 +6,6 @@
 - name: VM Workstation Setup
   hosts: localhost
   connection: local
-  become: true
   gather_facts: true
 
   vars_files:
@@ -18,11 +17,6 @@
         that:
           - ansible_os_family == "RedHat"
         fail_msg: "This playbook is designed for Red Hat family distributions (Fedora, RHEL, CentOS)"
-
-    - name: Update package cache
-      ansible.builtin.dnf:
-        update_cache: true
-      tags: packages
 
   roles:
     - role: packages

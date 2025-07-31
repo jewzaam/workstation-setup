@@ -43,9 +43,45 @@ dotfiles:
   - src: screenrc
     dest: .screenrc
     mode: "0644"
-  - src: gitconfig
-    dest: .gitconfig
-    mode: "0644"
+
+# Git configuration settings (managed separately to preserve user settings)
+git_config:
+  - name: push.default
+    value: simple
+  - name: difftool.prompt
+    value: false
+  - name: diff.tool
+    value: meld
+  - name: difftool.meld.cmd
+    value: 'meld $LOCAL $REMOTE'
+  - name: core.autocrlf
+    value: input
+  - name: core.editor
+    value: vim
+  - name: alias.lol
+    value: 'log --graph --decorate --pretty=oneline --abbrev-commit'
+  - name: alias.lola
+    value: 'log --graph --decorate --pretty=oneline --abbrev-commit --all'
+  - name: alias.grepv
+    value: "!f() { git grep $@ ':!vendor/'; }; f"
+  - name: color.diff
+    value: auto
+  - name: color.status
+    value: auto
+  - name: color.branch
+    value: auto
+  - name: color.interactive
+    value: auto
+  - name: color.ui
+    value: true
+  - name: color.pager
+    value: true
+  - name: pull.ff
+    value: only
+  - name: credential.helper
+    value: cache
+  - name: init.defaultBranch
+    value: main
 
 # GNOME extensions for validation (future use)
 gnome_extensions:

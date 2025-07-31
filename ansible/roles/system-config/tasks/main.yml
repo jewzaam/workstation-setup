@@ -16,40 +16,30 @@
         key: "/org/gnome/desktop/screensaver/idle-activation-enabled"
         value: "false"
         state: present
-      become: true
-      become_user: "{{ user_name }}"
 
     - name: Set session idle delay to never (0)
       community.general.dconf:
         key: "/org/gnome/desktop/session/idle-delay"
         value: "uint32 0"
         state: present
-      become: true
-      become_user: "{{ user_name }}"
 
     - name: Disable automatic suspend
       community.general.dconf:
         key: "/org/gnome/settings-daemon/plugins/power/sleep-inactive-ac-type"
-        value: "nothing"
+        value: "'nothing'"
         state: present
-      become: true
-      become_user: "{{ user_name }}"
 
     - name: Enable lock on manual suspend/screensaver (security)
       community.general.dconf:
         key: "/org/gnome/desktop/screensaver/lock-enabled"
         value: "true"
         state: present
-      become: true
-      become_user: "{{ user_name }}"
 
     - name: Set immediate lock when screensaver activates
       community.general.dconf:
         key: "/org/gnome/desktop/screensaver/lock-delay"
         value: "uint32 0"
         state: present
-      become: true
-      become_user: "{{ user_name }}"
 
     - name: Display GNOME settings configured
       ansible.builtin.debug:
@@ -73,8 +63,6 @@
       echo "gnome-extensions command not available"
     fi
   register: extensions_check
-  become: true
-  become_user: "{{ user_name }}"
   failed_when: false
   changed_when: false
 
@@ -92,7 +80,6 @@
 
 - name: Ensure dconf database is updated
   ansible.builtin.command: dconf update
-  become: true
-  become_user: "{{ user_name }}"
   changed_when: true
   when: gnome_check.rc == 0
+  failed_when: false  # Allow to fail since user settings don't require system db updates

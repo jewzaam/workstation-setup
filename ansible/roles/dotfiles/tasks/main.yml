@@ -36,6 +36,13 @@
     msg: "✓ .bashrc correctly sources .bashrc_prompt"
   when: not bashrc_prompt_check.changed
 
+- name: Configure git settings (preserves existing user config)
+  community.general.git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop: "{{ git_config }}"
+
 - name: Verify meld configuration in gitconfig
   ansible.builtin.lineinfile:
     path: "{{ user_home }}/.gitconfig"
@@ -69,3 +76,4 @@
       {% for result in dotfile_validation.results %}
       - {{ result.item.dest }}: {{ 'EXISTS' if result.stat.exists else 'MISSING' }}
       {% endfor %}
+      Git configuration: CONFIGURED via git_config module (preserves user settings)

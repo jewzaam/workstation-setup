@@ -49,10 +49,12 @@ run-packages: ## Install packages only
 	@$(MAKE) run TAGS=packages
 
 run-dotfiles: ## Deploy configuration files only  
-	@$(MAKE) run TAGS=dotfiles
+	@echo "Deploying dotfiles..."
+	@cd $(ANSIBLE_DIR) && ansible-playbook -i $(INVENTORY) -c $(CONNECTION) site.yml --tags dotfiles
 
 run-system-config: ## Apply system settings only
-	@$(MAKE) run TAGS=system-config
+	@echo "Applying system configuration..."
+	@cd $(ANSIBLE_DIR) && ansible-playbook -i $(INVENTORY) -c $(CONNECTION) site.yml --tags system-config
 
 check-deps: ## Verify all prerequisites are met
 	@echo "Checking for required dependencies..."
