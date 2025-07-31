@@ -44,6 +44,14 @@
   when: not cursor_installed.stat.exists
   register: cursor_download
 
+- name: Download Cursor icon
+  ansible.builtin.get_url:
+    url: "{{ cursor_icon_url }}"
+    dest: "{{ cursor_icon_file }}"
+    mode: "0644"
+    timeout: 60
+  when: not cursor_installed.stat.exists
+
 - name: Create Cursor desktop entry
   ansible.builtin.copy:
     content: |
@@ -51,7 +59,7 @@
       Name=Cursor
       Comment=AI-powered code editor
       Exec={{ cursor_install_dir }}/cursor.AppImage %F
-      Icon={{ cursor_install_dir }}/cursor.AppImage
+      Icon={{ cursor_icon_file }}
       Terminal=false
       Type=Application
       Categories=Development;TextEditor;
@@ -59,6 +67,13 @@
       StartupWMClass=cursor
     dest: "{{ cursor_desktop_file }}"
     mode: "0644"
+  when: cursor_download is succeeded
+
+- name: Create command line symlink for Cursor
+  ansible.builtin.file:
+    src: "{{ cursor_install_dir }}/cursor.AppImage"
+    dest: "/usr/local/bin/cursor"
+    state: link
   when: cursor_download is succeeded
 
 - name: Update desktop database
