@@ -41,6 +41,53 @@
         value: "uint32 0"
         state: present
 
+    # Performance optimization settings
+    - name: Disable GNOME animations for better performance
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/enable-animations"
+        value: "false"
+        state: present
+
+    - name: Disable GTK animations for better performance
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/gtk-enable-animations"
+        value: "false"
+        state: present
+
+    - name: Set font antialiasing to grayscale for better remote performance
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/font-antialiasing"
+        value: "'grayscale'"
+        state: present
+
+    - name: Set font hinting to slight for better remote performance
+      community.general.dconf:
+        key: "/org/gnome/desktop/interface/font-hinting"
+        value: "'slight'"
+        state: present
+
+    - name: Disable desktop icons for cleaner experience
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/show-desktop-icons"
+        value: "false"
+        state: present
+
+    # Terminal performance optimizations (for default profile)
+    - name: Get default GNOME Terminal profile
+      ansible.builtin.shell: |
+        set -o pipefail
+        gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'"
+      register: terminal_profile
+      failed_when: false
+      changed_when: false
+
+    - name: Disable GNOME Terminal transparency for better performance
+      community.general.dconf:
+        key: "/org/gnome/terminal/legacy/profiles:/:{{ terminal_profile.stdout }}/use-transparent-background"
+        value: "false"
+        state: present
+      when: terminal_profile.rc == 0 and terminal_profile.stdout != ""
+
     - name: Display GNOME settings configured
       ansible.builtin.debug:
         msg: |
@@ -49,6 +96,12 @@
           ✓ Automatic suspend disabled (VM stays active)
           ✓ Lock enabled on manual suspend/screensaver (security)
           ✓ Immediate lock when screensaver activates (security)
+          ✓ GNOME animations disabled (performance)
+          ✓ GTK animations disabled (performance)
+          ✓ Font antialiasing set to grayscale (remote performance)
+          ✓ Font hinting optimized for performance
+          ✓ Desktop icons disabled (cleaner experience)
+          ✓ GNOME Terminal transparency disabled (performance)
 
 - name: GNOME not available warning
   ansible.builtin.debug:
