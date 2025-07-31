@@ -1,0 +1,24 @@
+map th :tabnext<CR>
+map tl :tabprev<CR>
+map tn :tabnew<CR>
+map td :tabclose<CR>
+
+set nocompatible
+:syntax on
+:filetype on
+:filetype plugin indent on
+
+au BufRead,BufNewFile *.rake        setfiletype ruby
+
+augroup myfiletypes
+ " Clear old autocmds in group
+ autocmd!
+ " autoindent with two spaces, always expand tabs
+ autocmd FileType ruby,eruby,yaml set ai sw=2 sts=2  et
+augroup END
+
+set expandtab
+set ts=4
+set shiftwidth=4
+set background=dark
+

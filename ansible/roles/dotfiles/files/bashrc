@@ -1,0 +1,80 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+# initialize fuse mounts before we might create any files as a part of this file
+#(mount | grep ^encfs | grep aws >/dev/null) || (encfs -i 600 ~/.secret/aws/ ~/.aws/ --extpass='secret-tool lookup drive encfs')
+#(mount | grep ^encfs | grep ocm >/dev/null) || (encfs -i 600 ~/.secret/ocm/ ~/.ocm/ --extpass='secret-tool lookup drive encfs')
+#(mount | grep ^encfs | grep kube >/dev/null) || (encfs -i 600 ~/.secret/kube/ ~/.kube/ --extpass='secret-tool lookup drive encfs')
+
+export HISTTIMEFORMAT="%Y/%m/%d %T "
+export GOPATH=`go env GOPATH`
+export GOROOT=`go env GOROOT`
+export PATH=~/bin:$PATH:~/Downloads/google-cloud-sdk/bin/:~/.local/bin:$GOPATH/bin
+#export PATH=${HOME}/.local/bin/backplane/latest:${PATH}
+
+# make vi alias default editor
+export EDITOR=vi
+
+# Uncomment the following line if you don't like systemctl's auto-paging feature:
+# export SYSTEMD_PAGER=
+
+# User specific aliases and functions
+. ~/.bashrc_prompt
+
+alias vi='vim -p'
+#alias mvn="`which mvn | tail -n 1 | awk '{print $1}'` -Dmaven.junit.fork=no -Dmaven.rpm.forceRPMBuild=true"
+alias pjson="python -mjson.tool"
+alias pxml="xmllint --format -"
+alias sjson="python -c 'import json,sys; print json.dumps(json.load(sys.stdin), sort_keys=True)'"
+alias psjson="sjson|pjson"
+# https://gist.github.com/mboersma/1329669
+alias y2j="python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; json.dump(y, sys.stdout)'"
+alias j2y="python -c 'import sys, yaml, json; yaml.safe_dump(json.load(sys.stdin), sys.stdout, default_flow_style=False)'"
+alias nopush="git remote set-url --push origin no_push"
+alias oct="oc run testing --image=registry.redhat.io/rhel7/rhel-tools -i -t --rm --restart=Never -- /bin/bash"
+alias pip="pip3"
+alias fetch="git fetch --all --prune --tags"
+
+# set so sqldeveloper works for OCI
+export NLS_LANG=AMERICA_AMERICAN.AL32UTF8
+export JAVA_HOME=/etc/alternatives/java_sdk
+
+# http://unix.stackexchange.com/questions/72086/ctrl-s-hang-terminal-emulator
+stty -ixon
+
+
+# https://github.com/openshift/ops-sop/blob/master/v3/gitworkflow.asciidoc#function-for-bash
+function rebaseupstream () {
+  branch=prod
+  if ! [[ -z "$1" ]]; then
+    branch=$1
+  fi
+
+  startbranch=$(git describe --contains --all HEAD)
+  git checkout $branch
+  git fetch upstream
+  git fetch upstream --tags
+  git rebase upstream/$branch
+  git push origin $branch
+  git push origin --tags
+  git checkout ${startbranch}
+}
+
+bind '"\e[6~": menu-complete'
+bind '"\e[5~": menu-complete-backward'
+bind '"\e[1;5C": forward-word'
+bind '"\e[1;5D": backward-word'
+bind '"\e[5C": forward-word'
+bind '"\e[5D": backward-word'
+bind '"\e\e[C": forward-word'
+bind '"\e\e[D": backward-word'
+
+
+trap finish EXIT
+export PYTHONDONTWRITEBYTECODE=1
+
+export PATH=~/.npm-global/bin:$PATH
