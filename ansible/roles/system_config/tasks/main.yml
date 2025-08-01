@@ -4,12 +4,12 @@
 
 - name: Check if GNOME is available
   ansible.builtin.command: which gnome-shell
-  register: gnome_check
+  register: system_config_gnome_check
   failed_when: false
   changed_when: false
 
 - name: GNOME configuration block
-  when: gnome_check.rc == 0
+  when: system_config_gnome_check.rc == 0
   block:
     - name: Disable idle activation for screensaver
       community.general.dconf:
@@ -77,16 +77,16 @@
       ansible.builtin.shell: |
         set -o pipefail
         gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'"
-      register: terminal_profile
+      register: system_config_terminal_profile
       failed_when: false
       changed_when: false
 
     - name: Disable GNOME Terminal transparency for better performance
       community.general.dconf:
-        key: "/org/gnome/terminal/legacy/profiles:/:{{ terminal_profile.stdout }}/use-transparent-background"
+        key: "/org/gnome/terminal/legacy/profiles:/:{{ system_config_terminal_profile.stdout }}/use-transparent-background"
         value: "false"
         state: present
-      when: terminal_profile.rc == 0 and terminal_profile.stdout != ""
+      when: system_config_terminal_profile.rc == 0 and system_config_terminal_profile.stdout != ""
 
     - name: Display GNOME settings configured
       ansible.builtin.debug:
@@ -106,7 +106,7 @@
 - name: GNOME not available warning
   ansible.builtin.debug:
     msg: "WARNING: GNOME not detected. Screen lock settings skipped."
-  when: gnome_check.rc != 0
+  when: system_config_gnome_check.rc != 0
 
 - name: Check for GNOME extensions installation (validation only)
   ansible.builtin.shell: |
@@ -115,7 +115,7 @@
     else
       echo "gnome-extensions command not available"
     fi
-  register: extensions_check
+  register: system_config_extensions_check
   failed_when: false
   changed_when: false
 
@@ -123,16 +123,16 @@
   ansible.builtin.debug:
     msg: |
       GNOME Extensions Status:
-      {{ extensions_check.stdout if extensions_check.stdout else 'Unable to check extensions' }}
+      {{ system_config_extensions_check.stdout if system_config_extensions_check.stdout else 'Unable to check extensions' }}
 
       Required extensions (install manually):
       {% for ext in gnome_extensions %}
       - {{ ext.name }}: {{ ext.url }}
       {% endfor %}
-  when: gnome_check.rc == 0
+  when: system_config_gnome_check.rc == 0
 
 - name: Ensure dconf database is updated
   ansible.builtin.command: dconf update
   changed_when: true
-  when: gnome_check.rc == 0
+  when: system_config_gnome_check.rc == 0
   failed_when: false  # Allow to fail since user settings don't require system db updates

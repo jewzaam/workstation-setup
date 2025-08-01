@@ -38,14 +38,14 @@ lint: ## Run ansible-lint validation
 	@ansible-galaxy collection install -r $(ANSIBLE_DIR)/requirements.yml -p collections/
 	@echo "Debug: Files to be scanned:"
 	@cd $(ANSIBLE_DIR) && find . -name "*.yml" -o -name "*.yaml" | grep -v gpg/ | head -10
-	@echo "Running ansible-lint with local collections..."
-	@cd $(ANSIBLE_DIR) && ANSIBLE_COLLECTIONS_PATH=../collections/ ansible-lint .
-	@echo "✓ Lint validation passed"
+	@echo "Running ansible-lint (matching CI behavior)..."
+	@cd $(ANSIBLE_DIR) && ~/.local/bin/ansible-lint
+	@echo "✅ Lint validation passed"
 
 syntax: ## Validate playbook syntax
 	@echo "Checking playbook syntax..."
 	@cd $(ANSIBLE_DIR) && ansible-playbook --syntax-check -i $(INVENTORY) -c $(CONNECTION) site.yml
-	@echo "✓ Syntax validation passed"
+	@echo "✅ Syntax validation passed"
 
 dry-run: check-deps ## Run playbook in check mode (dry-run)
 	@echo "Running playbook in check mode (dry-run)..."
@@ -53,7 +53,7 @@ dry-run: check-deps ## Run playbook in check mode (dry-run)
 		--ask-become-pass \
 		$(if $(TAGS),--tags $(TAGS),) \
 		$(if $(LIMIT),--limit $(LIMIT),)
-	@echo "✓ Dry-run completed"
+	@echo "✅ Dry-run completed"
 
 run: syntax ## Complete VM setup (uses current configuration)
 	@echo "Running VM workstation setup with current configuration..."
@@ -99,13 +99,13 @@ check-deps: ## Verify all prerequisites are met
 		echo "❌ PyYAML not found. Please install: sudo dnf install python3-yaml"; \
 		exit 1; \
 	}
-	@echo "✓ All dependencies found"
+	@echo "✅ All dependencies found"
 	@echo "Checking system readiness..."
 	@cd $(ANSIBLE_DIR) && ansible-playbook --syntax-check -i $(INVENTORY) -c $(CONNECTION) site.yml >/dev/null 2>&1 || { \
 		echo "❌ Playbook syntax check failed"; \
 		exit 1; \
 	}
-	@echo "✓ System ready for workstation setup"
+	@echo "✅ System ready for workstation setup"
 
 info: ## Show playbook details
 	@echo "Playbook Information:"
@@ -125,7 +125,7 @@ clean: ## Remove temporary and backup files
 	@find $(ANSIBLE_DIR) -name "*.retry" -delete 2>/dev/null || true
 	@find $(ANSIBLE_DIR) -name "*.pyc" -delete 2>/dev/null || true  
 	@find $(ANSIBLE_DIR) -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
-	@echo "✓ Cleanup completed"
+	@echo "✅ Cleanup completed"
 
 version: ## Display Ansible version
 	@ansible --version

@@ -46,7 +46,7 @@
     backup: true
     force: "{{ not item.user_managed }}"
   loop: "{{ bashrc_d_files }}"
-  register: bashrc_d_deployed
+  register: dotfiles_bashrc_d_deployed
 
 - name: Verify bashrc.d sourcing
   ansible.builtin.lineinfile:
@@ -54,12 +54,12 @@
     line: "if [ -d ~/{{ bashrc_d_dir }} ]; then"
     state: present
   check_mode: true
-  register: bashrc_d_check
+  register: dotfiles_bashrc_d_check
 
 - name: Confirm bashrc.d sourcing
   ansible.builtin.debug:
     msg: "✓ .bashrc correctly sources {{ bashrc_d_dir }} directory"
-  when: not bashrc_d_check.changed
+  when: not dotfiles_bashrc_d_check.changed
 
 - name: Configure git settings (preserves existing user config)
   community.general.git_config:
@@ -116,14 +116,14 @@
   ansible.builtin.shell: |
     set -o pipefail
     git config --global --get diff.tool || echo "not_set"
-  register: git_diff_tool_check
+  register: dotfiles_git_diff_tool_check
   changed_when: false
   failed_when: false
 
 - name: Confirm git configuration setup
   ansible.builtin.debug:
-    msg: "✓ Git correctly configured with diff tool: {{ git_diff_tool_check.stdout }}"
-  when: git_diff_tool_check.rc == 0
+    msg: "✓ Git correctly configured with diff tool: {{ dotfiles_git_diff_tool_check.stdout }}"
+  when: dotfiles_git_diff_tool_check.rc == 0
 
 - name: Set ownership on all dotfiles
   ansible.builtin.file:
@@ -143,13 +143,13 @@
   ansible.builtin.stat:
     path: "{{ user_home }}/{{ item.dest }}"
   loop: "{{ dotfiles }}"
-  register: dotfile_validation
+  register: dotfiles_dotfile_validation
 
 - name: Validate bashrc.d configuration files exist
   ansible.builtin.stat:
     path: "{{ user_home }}/{{ bashrc_d_dir }}/{{ item.dest }}"
   loop: "{{ bashrc_d_files }}"
-  register: bashrc_d_validation
+  register: dotfiles_bashrc_d_validation
 
 - name: Validate screen configuration files exist
   ansible.builtin.stat:
@@ -158,23 +158,23 @@
     - .screenrc
     - .screenrc.d/base
     - .screenrc.d/user
-  register: screen_validation
+  register: dotfiles_screen_validation
 
 - name: Report deployment status
   ansible.builtin.debug:
     msg: |
       Dotfiles deployment summary:
-      {% for result in dotfile_validation.results %}
+      {% for result in dotfiles_dotfile_validation.results %}
       - {{ result.item.dest }}: {{ 'EXISTS' if result.stat.exists else 'MISSING' }}
       {% endfor %}
 
       Bashrc.d modular configuration:
-      {% for result in bashrc_d_validation.results %}
+      {% for result in dotfiles_bashrc_d_validation.results %}
       - {{ bashrc_d_dir }}/{{ result.item.dest }}: {{ 'EXISTS' if result.stat.exists else 'MISSING' }}
       {% endfor %}
 
       Screen configuration:
-      {% for result in screen_validation.results %}
+      {% for result in dotfiles_screen_validation.results %}
       - {{ result.item }}: {{ 'EXISTS' if result.stat.exists else 'MISSING' }}
       {% endfor %}
 
