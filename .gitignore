@@ -79,4 +79,14 @@ notes.txt
 TODO.md
 
 # User configuration
-config.yml 
+config.yml
+
+# GPG files - private keys and certificates
+*.gpg
+*.asc
+*.key
+*.sec
+*.sig
+gpg/
+.gnupg/
+**/gpg/ 
