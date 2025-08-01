@@ -2,7 +2,7 @@
 # Makefile for VM Workstation Setup Ansible Playbook
 
 .DEFAULT_GOAL := help
-.PHONY: help lint syntax run dry-run clean check-deps run-packages run-dotfiles run-system-config info version
+.PHONY: help lint syntax run dry-run clean check-deps run-packages run-dotfiles run-system-config configure show-config info version
 
 # Variables
 ANSIBLE_DIR := ansible
@@ -19,6 +19,18 @@ help: ## Display this help message
 	@echo "Available targets:"
 	@echo ""
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+configure: ## Interactive configuration picker
+	@echo "Running configuration picker..."
+	@python3 configure.py
+
+show-config: ## Show current configuration
+	@echo "Current configuration:"
+	@python3 configure.py --show
+
+run-config: ## Run setup with current configuration
+	@echo "Running setup with current configuration..."
+	@python3 -c "import yaml; config=yaml.safe_load(open('config.yml')); tags=[k.replace('_', '-') for k,v in config.items() if v and k not in ['component_descriptions', 'default_selections']]; print('make run TAGS=' + ','.join(tags) if tags else 'make run')" | bash
 
 lint: ## Run ansible-lint validation
 	@echo "Running ansible-lint validation..."
@@ -38,8 +50,8 @@ dry-run: check-deps ## Run playbook in check mode (dry-run)
 		$(if $(LIMIT),--limit $(LIMIT),)
 	@echo "✓ Dry-run completed"
 
-run: syntax ## Complete VM setup
-	@echo "Running VM workstation setup..."
+run: syntax ## Complete VM setup (uses current configuration)
+	@echo "Running VM workstation setup with current configuration..."
 	@cd $(ANSIBLE_DIR) && ansible-playbook -i $(INVENTORY) -c $(CONNECTION) site.yml \
 		--ask-become-pass \
 		$(if $(TAGS),--tags $(TAGS),) \
@@ -56,6 +68,14 @@ run-system-config: ## Apply system settings only
 	@echo "Applying system configuration..."
 	@cd $(ANSIBLE_DIR) && ansible-playbook -i $(INVENTORY) -c $(CONNECTION) site.yml --tags system-config
 
+run-ssh: ## Install and configure SSH server
+	@echo "Installing and configuring SSH..."
+	@cd $(ANSIBLE_DIR) && ansible-playbook -i $(INVENTORY) -c $(CONNECTION) site.yml --tags ssh --ask-become-pass
+
+run-nomachine: ## Install NoMachine for remote desktop
+	@echo "Installing NoMachine..."
+	@cd $(ANSIBLE_DIR) && ansible-playbook -i $(INVENTORY) -c $(CONNECTION) site.yml --tags nomachine --ask-become-pass
+
 check-deps: ## Verify all prerequisites are met
 	@echo "Checking for required dependencies..."
 	@command -v ansible >/dev/null 2>&1 || { \
@@ -64,6 +84,14 @@ check-deps: ## Verify all prerequisites are met
 	}
 	@command -v ansible-lint >/dev/null 2>&1 || { \
 		echo "❌ ansible-lint not found. Please install: sudo dnf install ansible-lint"; \
+		exit 1; \
+	}
+	@command -v python3 >/dev/null 2>&1 || { \
+		echo "❌ python3 not found. Please install: sudo dnf install python3"; \
+		exit 1; \
+	}
+	@python3 -c "import yaml" 2>/dev/null || { \
+		echo "❌ PyYAML not found. Please install: sudo dnf install python3-yaml"; \
 		exit 1; \
 	}
 	@echo "✓ All dependencies found"

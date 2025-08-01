@@ -16,6 +16,26 @@ essential_packages:
   - curl
   - wget
 
+# SSH configuration
+ssh_packages:
+  - openssh-server
+  - openssh-clients
+
+ssh_service: sshd
+ssh_firewall_service: ssh
+
+# NoMachine configuration
+nomachine_packages:
+  - wget
+
+nomachine_download_dir: "{{ user_home }}/Downloads"
+nomachine_install_method: "rpm"  # Options: rpm, repo
+nomachine_version: "9.1.24_6"
+nomachine_arch: "x86_64"
+nomachine_base_url: "https://web9001.nomachine.com/download/9.1/Linux"
+nomachine_rpm_filename: "nomachine_{{ nomachine_version }}_{{ nomachine_arch }}.rpm"
+nomachine_download_url: "{{ nomachine_base_url }}/{{ nomachine_rpm_filename }}"
+
 # Cursor installation
 cursor_version: "latest"
 cursor_install_method: "appimage"  # Options: appimage, package

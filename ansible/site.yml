@@ -25,6 +25,10 @@
       tags: dotfiles
     - role: system-config
       tags: system-config
+    - role: ssh
+      tags: ssh
+    - role: nomachine
+      tags: nomachine
 
   post_tasks:
     - name: Display setup completion message
