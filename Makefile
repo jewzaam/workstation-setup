@@ -34,7 +34,12 @@ run-config: ## Run setup with current configuration
 
 lint: ## Run ansible-lint validation
 	@echo "Running ansible-lint validation..."
-	@cd $(ANSIBLE_DIR) && ansible-lint site.yml
+	@echo "Installing collections locally..."
+	@ansible-galaxy collection install -r $(ANSIBLE_DIR)/requirements.yml -p collections/
+	@echo "Debug: Files to be scanned:"
+	@cd $(ANSIBLE_DIR) && find . -name "*.yml" -o -name "*.yaml" | grep -v gpg/ | head -10
+	@echo "Running ansible-lint with local collections..."
+	@cd $(ANSIBLE_DIR) && ANSIBLE_COLLECTIONS_PATH=../collections/ ansible-lint .
 	@echo "✓ Lint validation passed"
 
 syntax: ## Validate playbook syntax

@@ -12,17 +12,17 @@
     name: "{{ essential_packages }}"
     state: present
   become: true
-  register: package_install_result
+  register: packages_package_install_result
 
 - name: Display installed packages
   ansible.builtin.debug:
     msg: "Installed packages: {{ essential_packages | join(', ') }}"
-  when: package_install_result is succeeded
+  when: packages_package_install_result is succeeded
 
 - name: Check if Cursor is already installed
   ansible.builtin.stat:
     path: "{{ cursor_install_dir }}/cursor.AppImage"
-  register: cursor_installed
+  register: packages_cursor_installed
 
 - name: Create Cursor installation directory
   ansible.builtin.file:
@@ -30,27 +30,27 @@
     state: directory
     mode: "0755"
   become: true
-  when: not cursor_installed.stat.exists
+  when: not packages_cursor_installed.stat.exists
 
 - name: Get Cursor download URL from API
   ansible.builtin.uri:
     url: "{{ cursor_api_url }}"
     method: GET
     return_content: true
-  register: cursor_api_response
-  when: not cursor_installed.stat.exists
+  register: packages_cursor_api_response
+  when: not packages_cursor_installed.stat.exists
 
 - name: Download Cursor AppImage
   ansible.builtin.get_url:
-    url: "{{ cursor_api_response.json.downloadUrl }}"
+    url: "{{ packages_cursor_api_response.json.downloadUrl }}"
     dest: "{{ cursor_install_dir }}/cursor.AppImage"
     mode: "0755"
     timeout: 300
     headers:
       User-Agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
   become: true
-  when: not cursor_installed.stat.exists
-  register: cursor_download
+  when: not packages_cursor_installed.stat.exists
+  register: packages_cursor_download
 
 - name: Download Cursor icon
   ansible.builtin.get_url:
@@ -59,7 +59,7 @@
     mode: "0644"
     timeout: 60
   become: true
-  when: not cursor_installed.stat.exists
+  when: not packages_cursor_installed.stat.exists
 
 - name: Create Cursor desktop entry
   ansible.builtin.copy:
@@ -77,7 +77,7 @@
     dest: "{{ cursor_desktop_file }}"
     mode: "0644"
   become: true
-  when: cursor_download is succeeded
+  when: packages_cursor_download is succeeded
 
 - name: Create command line symlink for Cursor
   ansible.builtin.file:
@@ -85,26 +85,26 @@
     dest: "/usr/local/bin/cursor"
     state: link
   become: true
-  when: cursor_download is succeeded
+  when: packages_cursor_download is succeeded
 
 - name: Update desktop database
   ansible.builtin.command: update-desktop-database /usr/share/applications/
   become: true
-  when: cursor_download is succeeded
+  when: packages_cursor_download is succeeded
   changed_when: true
 
 - name: Verify Go installation
   ansible.builtin.command: go version
-  register: go_version_check
+  register: packages_go_version_check
   changed_when: false
   failed_when: false
 
 - name: Display Go version
   ansible.builtin.debug:
-    msg: "Go version: {{ go_version_check.stdout }}"
-  when: go_version_check.rc == 0
+    msg: "Go version: {{ packages_go_version_check.stdout }}"
+  when: packages_go_version_check.rc == 0
 
 - name: Warn if Go installation failed
   ansible.builtin.debug:
     msg: "WARNING: Go installation verification failed. .bashrc exports may not work correctly."
-  when: go_version_check.rc != 0
+  when: packages_go_version_check.rc != 0
