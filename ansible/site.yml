@@ -23,8 +23,8 @@
       tags: packages
     - role: dotfiles
       tags: dotfiles
-    - role: system-config
-      tags: system-config
+    - role: system_config
+      tags: system_config
     - role: ssh
       tags: ssh
     - role: nomachine

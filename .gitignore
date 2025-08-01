@@ -8,6 +8,7 @@ __pycache__/
 .ansible/
 .ansible_vault_password
 ansible.log
+collections/
 
 # Backup files created by Ansible
 *.ansible-backup~

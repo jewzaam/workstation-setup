@@ -139,4 +139,4 @@ gnome_extensions:
     url: "https://extensions.gnome.org/extension/258/notifications-alert-on-user-menu/"
   - id: 3010
     name: "system-monitor-next"
-    url: "https://extensions.gnome.org/extension/3010/system-monitor-next/" 
+    url: "https://extensions.gnome.org/extension/3010/system-monitor-next/"
