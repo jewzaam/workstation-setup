@@ -75,4 +75,7 @@ htmlcov/
 local/
 scratch/
 notes.txt
-TODO.md 
+TODO.md
+
+# User configuration
+config.yml 
