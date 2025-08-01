@@ -4,5 +4,7 @@
 
 - name: Reload firewall
   ansible.posix.firewalld:
-    state: reloaded
+    state: enabled
+    immediate: true
+    permanent: true
   become: true
