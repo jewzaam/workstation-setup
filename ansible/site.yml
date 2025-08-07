@@ -21,8 +21,8 @@
   roles:
     - role: packages
       tags: packages
-    - role: dotfiles
-      tags: dotfiles
+    - role: files
+      tags: files
     - role: system_config
       tags: system_config
     - role: ssh

@@ -36,6 +36,7 @@
   ansible.builtin.dnf:
     name: "{{ nomachine_download_dir }}/{{ nomachine_rpm_filename }}"
     state: present
+    disable_gpg_check: true
   become: true
   when: nomachine_download is succeeded
   register: nomachine_install

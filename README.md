@@ -8,7 +8,10 @@ Install on the target VM before running:
 
 ```bash
 # Fedora/RHEL/CentOS - Install required packages
-sudo dnf install ansible ansible-lint git python3 python3-yaml
+sudo dnf install ansible git python3 python3-yaml
+
+# Install dev/test deps (ansible-lint)
+pip3 install --user -r requirements-dev.txt
 
 # Verify installation
 ansible --version

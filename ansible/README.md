@@ -7,6 +7,7 @@ Automated VM workstation setup using Ansible. Installs packages, deploys dotfile
 ## Requirements
 - Fedora/RHEL/CentOS VM (Red Hat family)
 - Ansible installed (`sudo dnf install ansible`)
+- ansible-lint installed for lint target (`pip3 install --user -r requirements-dev.txt`)
 - Root/sudo access
 - Internet connection for package downloads
 
