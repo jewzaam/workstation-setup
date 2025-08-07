@@ -2,7 +2,7 @@
 # Makefile for VM Workstation Setup Ansible Playbook
 
 .DEFAULT_GOAL := help
-.PHONY: help dev-deps lint syntax run dry-run clean check-deps run-packages run-dotfiles run-system-config configure show-config info version
+.PHONY: help dev-deps collections lint syntax run dry-run clean check-deps run-packages run-dotfiles run-system-config configure show-config info version
 
 # Variables
 ANSIBLE_DIR := ansible
@@ -26,6 +26,10 @@ ABS_ANSIBLE := $(CURDIR)/$(ANSIBLE)
 ABS_ANSIBLE_PLAYBOOK := $(CURDIR)/$(ANSIBLE_PLAYBOOK)
 ABS_ANSIBLE_GALAXY := $(CURDIR)/$(ANSIBLE_GALAXY)
 ABS_ANSIBLE_LINT := $(CURDIR)/$(ANSIBLE_LINT)
+
+# Collections directory and environment for reproducible installs
+COLLECTIONS_DIR := $(CURDIR)/collections
+ANSIBLE_ENV := ANSIBLE_CONFIG=$(CURDIR)/$(ANSIBLE_DIR)/ansible.cfg ANSIBLE_COLLECTIONS_PATH=$(COLLECTIONS_DIR)
 
 help: ## Display this help message
 	@echo "VM Workstation Setup - Ansible Playbook"
@@ -62,30 +66,35 @@ dev-deps: ## Install development/test dependencies (e.g., ansible-lint) in venv
 lint: dev-deps ## Run ansible-lint validation
 	@echo "Running ansible-lint validation..."
 	@echo "Installing collections locally..."
-	@$(ANSIBLE_GALAXY) collection install -r $(ANSIBLE_DIR)/requirements.yml -p collections/
+	@$(ANSIBLE_ENV) $(ANSIBLE_GALAXY) collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
 	@echo "Debug: Files to be scanned:"
 	@cd $(ANSIBLE_DIR) && find . -name "*.yml" -o -name "*.yaml" | grep -v gpg/ | head -10
 	@echo "Running ansible-lint (matching CI behavior)..."
-	@cd $(ANSIBLE_DIR) && $(ABS_ANSIBLE_LINT)
+	@cd $(ANSIBLE_DIR) && $(ANSIBLE_ENV) $(ABS_ANSIBLE_LINT)
 	@echo "✅ Lint validation passed"
 
-syntax: dev-deps ## Validate playbook syntax
+collections: dev-deps ## Install required Ansible collections locally
+	@echo "Installing required Ansible collections to $(COLLECTIONS_DIR)..."
+	@$(ANSIBLE_ENV) $(ANSIBLE_GALAXY) collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
+	@echo "✅ Collections installed"
+
+syntax: dev-deps collections ## Validate playbook syntax
 	@echo "Checking playbook syntax..."
 	@$(ABS_ANSIBLE_LINT) --version >/dev/null || true
-	@$(ABS_ANSIBLE_PLAYBOOK) --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK)
+	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK)
 	@echo "✅ Syntax validation passed"
 
-dry-run: check-deps ## Run playbook in check mode (dry-run)
+dry-run: check-deps collections ## Run playbook in check mode (dry-run)
 	@echo "Running playbook in check mode (dry-run)..."
-	@$(ABS_ANSIBLE_PLAYBOOK) --check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) \
+	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) --check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) \
 		--ask-become-pass \
 		$(if $(TAGS),--tags $(TAGS),) \
 		$(if $(LIMIT),--limit $(LIMIT),)
 	@echo "✅ Dry-run completed"
 
-run: syntax ## Complete VM setup (uses current configuration)
+run: syntax collections ## Complete VM setup (uses current configuration)
 	@echo "Running VM workstation setup with current configuration..."
-	@$(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) \
+	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) \
 		--ask-become-pass \
 		$(if $(TAGS),--tags $(TAGS),) \
 		$(if $(LIMIT),--limit $(LIMIT),)
@@ -93,21 +102,21 @@ run: syntax ## Complete VM setup (uses current configuration)
 run-packages: ## Install packages only
 	@$(MAKE) run TAGS=packages
 
-run-dotfiles: ## Deploy configuration files only  
+run-dotfiles: collections ## Deploy configuration files only  
 	@echo "Deploying files..."
-	@$(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags files
+	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags files
 
-run-system-config: ## Apply system settings only
+run-system-config: collections ## Apply system settings only
 	@echo "Applying system configuration..."
-	@$(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags system-config
+	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags system-config
 
-run-ssh: ## Install and configure SSH server
+run-ssh: collections ## Install and configure SSH server
 	@echo "Installing and configuring SSH..."
-	@$(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags ssh --ask-become-pass
+	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags ssh --ask-become-pass
 
-run-nomachine: ## Install NoMachine for remote desktop
+run-nomachine: collections ## Install NoMachine for remote desktop
 	@echo "Installing NoMachine..."
-	@$(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags nomachine --ask-become-pass
+	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags nomachine --ask-become-pass
 
 check-deps: ## Verify all prerequisites are met
 	@echo "Checking for required dependencies..."
@@ -129,7 +138,7 @@ check-deps: ## Verify all prerequisites are met
 	}
 	@echo "✅ All dependencies found"
 	@echo "Checking system readiness..."
-	@$(ABS_ANSIBLE_PLAYBOOK) --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) >/dev/null 2>&1 || { \
+	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) >/dev/null 2>&1 || { \
 		echo "❌ Playbook syntax check failed"; \
 		exit 1; \
 	}
@@ -150,9 +159,19 @@ info: ## Show playbook details
 
 clean: ## Remove temporary and backup files
 	@echo "Cleaning temporary files..."
-	@find $(ANSIBLE_DIR) -name "*.retry" -delete 2>/dev/null || true
-	@find $(ANSIBLE_DIR) -name "*.pyc" -delete 2>/dev/null || true  
-	@find $(ANSIBLE_DIR) -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+	# Python caches
+	@find . -name "*.pyc" -delete 2>/dev/null || true
+	@find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+	# Ansible retry/logs and ansible temp dirs
+	@find . -name "*.retry" -delete 2>/dev/null || true
+	@rm -f $(ANSIBLE_DIR)/ansible.log 2>/dev/null || true
+	@rm -rf .ansible 2>/dev/null || true
+	# Local collections cache
+	@rm -rf collections 2>/dev/null || true
+	# Python virtual environment
+	@rm -rf $(VENV_DIR) 2>/dev/null || true
+	# Misc ignored artifacts
+	@rm -rf dist build *.egg-info/ docs/_build site .pytest_cache .coverage htmlcov .tox local scratch logs 2>/dev/null || true
 	@echo "✅ Cleanup completed"
 
 version: ## Display Ansible version
