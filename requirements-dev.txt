@@ -1,0 +1,5 @@
+# Development/test dependencies
+# Install with: pip3 install --user -r requirements-dev.txt
+
+ansible-lint>=24.0.0
+
