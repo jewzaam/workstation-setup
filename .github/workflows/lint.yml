@@ -8,16 +8,21 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    name: Ansible Lint
+    name: Lint
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Install collections locally
-      run: ansible-galaxy collection install -r ansible/requirements.yml -p collections/
-      
-    - name: Run ansible-lint
-      uses: ansible/ansible-lint@main
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        working_directory: ansible
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+        
+    - name: Run linting
+      run: make lint
