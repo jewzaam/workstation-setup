@@ -1,0 +1,22 @@
+---
+# Git configuration tasks
+
+- name: Configure git settings (preserves existing user config)
+  community.general.git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  loop: "{{ git_config }}"
+
+- name: Verify git configuration was applied
+  ansible.builtin.shell: |
+    set -o pipefail
+    git config --global --get diff.tool || echo "not_set"
+  register: git_diff_tool_check
+  changed_when: false
+  failed_when: false
+
+- name: Confirm git configuration setup
+  ansible.builtin.debug:
+    msg: "✓ Git correctly configured with diff tool: {{ git_diff_tool_check.stdout }}"
+  when: git_diff_tool_check.rc == 0

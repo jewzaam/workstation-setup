@@ -23,6 +23,8 @@
       tags: packages
     - role: files
       tags: files
+    - role: git
+      tags: git
     - role: system_config
       tags: system_config
     - role: ssh
