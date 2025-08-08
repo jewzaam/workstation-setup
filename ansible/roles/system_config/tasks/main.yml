@@ -73,20 +73,30 @@
         state: present
 
     # Terminal performance optimizations (for default profile)
-    - name: Get default GNOME Terminal profile
+    - name: Check if gnome-terminal is installed
+      ansible.builtin.command: which gnome-terminal
+      register: system_config_gnome_terminal_check
+      failed_when: false
+      changed_when: false
+
+    - name: Get default GNOME Terminal profile (via dconf)
       ansible.builtin.shell: |
         set -o pipefail
-        gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'"
+        dconf read /org/gnome/terminal/legacy/profiles:/default | tr -d "' "
       register: system_config_terminal_profile
       failed_when: false
       changed_when: false
+      when: system_config_gnome_terminal_check.rc == 0
 
     - name: Disable GNOME Terminal transparency for better performance
       community.general.dconf:
         key: "/org/gnome/terminal/legacy/profiles:/:{{ system_config_terminal_profile.stdout }}/use-transparent-background"
         value: "false"
         state: present
-      when: system_config_terminal_profile.rc == 0 and system_config_terminal_profile.stdout != ""
+      when:
+        - system_config_gnome_terminal_check.rc == 0
+        - system_config_terminal_profile.rc == 0
+        - system_config_terminal_profile.stdout != ""
 
 - name: GNOME not available warning
   ansible.builtin.debug:
