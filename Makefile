@@ -2,7 +2,7 @@
 # Makefile for VM Workstation Setup Ansible Playbook
 
 .DEFAULT_GOAL := help
-.PHONY: help dev-deps collections lint syntax run dry-run clean check-deps configure show-config info version
+.PHONY: help dev-deps collections lint lint-python lint-ansible syntax run dry-run clean check-deps configure show-config info version
 
 # Variables
 ANSIBLE_DIR := ansible
@@ -57,7 +57,15 @@ dev-deps: ## Install development/test dependencies (e.g., ansible-lint) in venv
 	@$(PIP) install -r requirements-dev.txt
 	@echo "✅ Dev/test dependencies installed in $(VENV_DIR)"
 
-lint: dev-deps ## Run ansible-lint validation
+lint: dev-deps lint-python lint-ansible ## Run all linting
+	@echo "✅ All linting passed"
+
+lint-python: ## Lint Python files with ruff
+	@echo "Running ruff on Python files..."
+	@ruff check configure.py
+	@echo "✅ Python lint passed"
+
+lint-ansible: ## Run ansible-lint validation
 	@echo "Running ansible-lint validation..."
 	@echo "Installing collections locally..."
 	@ansible-galaxy collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
@@ -65,7 +73,7 @@ lint: dev-deps ## Run ansible-lint validation
 	@find $(ANSIBLE_DIR) -name "*.yml" -o -name "*.yaml" | grep -v gpg/ | head -10
 	@echo "Running ansible-lint (matching CI behavior)..."
 	@ansible-lint $(ANSIBLE_DIR)
-	@echo "✅ Lint validation passed"
+	@echo "✅ Ansible lint passed"
 
 collections: dev-deps ## Install required Ansible collections locally
 	@echo "Installing required Ansible collections to $(COLLECTIONS_DIR)..."

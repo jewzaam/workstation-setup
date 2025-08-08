@@ -3,9 +3,7 @@
 # Interactive configuration picker for VM workstation setup
 
 import yaml
-import os
 import sys
-import subprocess
 from pathlib import Path
 
 def create_default_config():
@@ -30,39 +28,24 @@ def create_default_config():
     return default_config
 
 def load_config():
-    """Load configuration from config.yml, create if doesn't exist"""
+    """Load configuration from config.yml, create if missing"""
     config_file = Path("config.yml")
+
     if not config_file.exists():
         print("📝 Creating default config.yml...")
-        config = create_default_config()
-        save_config(config)
-        return config
-    
+        defaults = create_default_config()
+        save_config(defaults)
+        return defaults
+
     with open(config_file, 'r') as f:
-        return yaml.safe_load(f)
+        user_config = yaml.safe_load(f) or {}
+
+    return user_config
 
 def save_config(config):
     """Save configuration to config.yml"""
     with open("config.yml", 'w') as f:
         yaml.dump(config, f, default_flow_style=False, sort_keys=False)
-
-def get_enabled_tags(config):
-    """Get list of enabled tags based on configuration"""
-    enabled_tags = []
-    tag_mapping = {
-        'packages': 'packages',
-        'files': 'files', 
-        'git': 'git',
-        'system_config': 'system-config',
-        'ssh': 'ssh',
-        'nomachine': 'nomachine'
-    }
-    
-    for component, enabled in config.items():
-        if component in tag_mapping and enabled:
-            enabled_tags.append(tag_mapping[component])
-    
-    return enabled_tags
 
 def display_menu(config):
     """Display the component selection menu"""
@@ -84,65 +67,37 @@ def display_menu(config):
     print("\n" + "="*60)
 
 def interactive_picker(config):
-    """Run interactive component picker"""
+    """Interactive component picker using InquirerPy checkbox UI"""
+    try:
+        from InquirerPy import inquirer
+    except Exception:
+        print("InquirerPy is required for interactive selection. Run: make dev-deps", file=sys.stderr)
+        raise
+
     components = [k for k in config.keys() if k not in ['component_descriptions', 'default_selections']]
     descriptions = config.get('component_descriptions', {})
-    
-    print("\nSelect components to install:")
-    print("(Use number to toggle, a=all, n=none, d=defaults, s=save, q=quit)")
-    print()
-    
-    # Create selection list
-    selections = {}
-    for component in components:
-        selections[component] = config.get(component, False)
-    
-    while True:
-        # Clear screen (simple approach)
-        os.system('clear' if os.name == 'posix' else 'cls')
-        
-        print("\n" + "="*60)
-        print("VM Workstation Component Selection")
-        print("="*60)
-        print()
-        
-        for i, component in enumerate(components, 1):
-            status = "✅" if selections[component] else "❌"
-            description = descriptions.get(component, component)
-            print(f"{i:2}. {status} {component:15} - {description}")
-        
-        print()
-        print("Commands:")
-        print("  [1-{}] Toggle component".format(len(components)))
-        print("  [a] Select all")
-        print("  [n] Select none")
-        print("  [d] Use defaults")
-        print("  [s] Save and exit")
-        print("  [q] Quit without saving")
-        print()
-        
-        choice = input("Enter choice: ").strip().lower()
-        
-        if choice == 'q':
-            print("Configuration cancelled.")
-            return None
-        elif choice == 's':
-            return selections
-        elif choice == 'a':
-            for component in components:
-                selections[component] = True
-        elif choice == 'n':
-            for component in components:
-                selections[component] = False
-        elif choice == 'd':
-            defaults = config.get('default_selections', ['packages', 'files', 'system_config', 'git'])
-            for component in components:
-                selections[component] = component in defaults
-        elif choice.isdigit():
-            idx = int(choice) - 1
-            if 0 <= idx < len(components):
-                component = components[idx]
-                selections[component] = not selections[component]
+
+    # Preselect using per-choice "enabled" (robust across library versions)
+    choices = [
+        {
+            "name": f"{component} - {descriptions.get(component, component)}",
+            "value": component,
+            "enabled": bool(config.get(component, False)),
+        }
+        for component in components
+    ]
+
+    selected = inquirer.checkbox(
+        message="Select components (space to toggle, enter to confirm):",
+        choices=choices,
+        instruction="↑/↓ to move, space to select, type to filter",
+        cycle=True,
+        height=10,
+        enabled_symbol="✅",
+        disabled_symbol="❌",
+    ).execute()
+
+    return {component: (component in selected) for component in components}
 
 def main():
     """Main configuration function"""
@@ -159,18 +114,12 @@ def main():
     # Run interactive picker
     selections = interactive_picker(config)
     
-    if selections is None:
-        return
-    
     # Update config with selections
     for component, enabled in selections.items():
         config[component] = enabled
     
     # Save configuration
     save_config(config)
-    
-    # Get enabled tags
-    enabled_tags = get_enabled_tags(config)
     
     print("\n✅ Configuration saved!")
     print("\nSelected components:")
@@ -179,16 +128,7 @@ def main():
         print(f"  {status} {component}")
     
     print("\nTo run the setup with these selections:")
-    if enabled_tags:
-        print("  make run TAGS={}".format(','.join(enabled_tags)))
-    else:
-        print("  make run")
+    print("  make run")
     
-    print("\nOr run individual components:")
-    for component, enabled in selections.items():
-        if enabled:
-            tag = component.replace('_', '-')
-            print("  make run-{}".format(tag))
-
 if __name__ == "__main__":
     main() 
