@@ -12,18 +12,18 @@ def create_default_config():
     """Create default configuration file"""
     default_config = {
         'packages': True,
-        'dotfiles': True,
+        'files': True,
         'system_config': True,
         'ssh': False,
         'nomachine': False,
         'component_descriptions': {
             'packages': 'Install development packages (Python, Go, Git, Cursor, etc.)',
-            'dotfiles': 'Deploy configuration files (.bashrc, .vimrc, .screenrc, etc.)',
+            'files': 'Deploy configuration files (.bashrc, .vimrc, .screenrc, etc.)',
             'system_config': 'Configure GNOME for remote access performance',
             'ssh': 'Install and configure SSH server for remote access',
             'nomachine': 'Install NoMachine for graphical remote desktop access'
         },
-        'default_selections': ['packages', 'dotfiles', 'system_config']
+        'default_selections': ['packages', 'files', 'system_config']
     }
     return default_config
 
@@ -49,7 +49,7 @@ def get_enabled_tags(config):
     enabled_tags = []
     tag_mapping = {
         'packages': 'packages',
-        'dotfiles': 'dotfiles', 
+        'files': 'files', 
         'system_config': 'system-config',
         'ssh': 'ssh',
         'nomachine': 'nomachine'
@@ -132,7 +132,7 @@ def interactive_picker(config):
             for component in components:
                 selections[component] = False
         elif choice == 'd':
-            defaults = config.get('default_selections', ['packages', 'dotfiles', 'system_config'])
+            defaults = config.get('default_selections', ['packages', 'files', 'system_config'])
             for component in components:
                 selections[component] = component in defaults
         elif choice.isdigit():

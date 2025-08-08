@@ -1,6 +1,6 @@
 # VM Workstation Setup
 
-Automated VM configuration using Ansible. Sets up development environment with packages, dotfiles, and system settings optimized for remote access. Now includes optional SSH and NoMachine installation with interactive configuration.
+Automated VM configuration using Ansible. Sets up development environment with packages, user files, and system settings optimized for remote access. Now includes optional SSH and NoMachine installation with interactive configuration.
 
 ## Prerequisites
 
@@ -9,9 +9,6 @@ Install on the target VM before running:
 ```bash
 # Fedora/RHEL/CentOS - Install required packages
 sudo dnf install ansible git python3 python3-yaml
-
-# Install dev/test deps (ansible-lint)
-pip3 install --user -r requirements-dev.txt
 
 # Verify installation
 ansible --version
@@ -55,7 +52,7 @@ ansible-playbook site.yml --ask-become-pass
 The `make configure` command launches an interactive picker that lets you select which components to install:
 
 - **packages** - Install development packages (Python, Go, Git, Cursor, etc.)
-- **dotfiles** - Deploy configuration files (.bashrc, .vimrc, .screenrc, etc.)
+- **files** - Deploy configuration files (.bashrc, .vimrc, .screenrc, etc.)
 - **system_config** - Configure GNOME for remote access performance
 - **ssh** - Install and configure SSH server for remote access
 - **nomachine** - Install NoMachine for graphical remote desktop access
@@ -66,7 +63,7 @@ Edit `config.yml` to customize your setup:
 ```yaml
 # Core components (always installed)
 packages: true
-dotfiles: true
+files: true
 system_config: true
 
 # Optional components
@@ -78,7 +75,7 @@ nomachine: false
 
 ### Basic Development Setup
 ```bash
-make configure  # Select packages, dotfiles, system_config
+make configure  # Select packages, files, system_config
 make run-config # Run with current configuration
 ```
 
@@ -90,22 +87,19 @@ make run-config # Run with current configuration
 
 ### Work VM (No Remote Access)
 ```bash
-make configure  # Select only packages, dotfiles, system_config
+make configure  # Select only packages, files, system_config
 make run-config # Run with current configuration
 ```
 
-### Run Specific Components
+### Run With Configuration
 ```bash
-make run-packages      # Packages only
-make run-dotfiles      # Configuration files only
-make run-system-config # System settings only
-make run-ssh          # SSH server only
-make run-nomachine    # NoMachine only
+make configure   # choose components
+make run         # runs with current selections
 ```
 
 ### Run with Custom Tags
 ```bash
-make run TAGS=packages,dotfiles,system-config
+make run TAGS=packages,files,system-config
 make run TAGS=ssh,nomachine
 ```
 
@@ -158,7 +152,7 @@ workstation-setup/
     ├── README.md          # Detailed Ansible docs
     └── roles/             # Organized by function
         ├── packages/      # Package installation
-        ├── dotfiles/      # Configuration files
+        ├── files/         # Configuration files
         ├── system-config/ # GNOME optimization
         ├── ssh/          # SSH server setup
         └── nomachine/    # NoMachine installation
@@ -175,11 +169,7 @@ make lint              # Code quality checks
 make check-deps        # Check system dependencies
 make dry-run           # Preview changes
 make run               # Complete VM setup (uses config)
-make run-packages      # Install packages only
-make run-dotfiles      # Deploy config files only
-make run-system-config # Apply system settings only
-make run-ssh          # Install SSH server only
-make run-nomachine    # Install NoMachine only
+make run               # Complete VM setup (uses config)
 ```
 
 ## Remote Access Options
