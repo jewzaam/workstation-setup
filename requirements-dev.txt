@@ -2,4 +2,6 @@
 # Install with: pip3 install --user -r requirements-dev.txt
 
 ansible-lint>=24.0.0
+InquirerPy>=0.3.4
+ruff>=0.6.0
 
