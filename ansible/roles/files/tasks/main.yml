@@ -61,13 +61,6 @@
     msg: "✓ .bashrc correctly sources {{ bashrc_d_dir }} directory"
   when: not files_bashrc_d_check.changed
 
-- name: Configure git settings (preserves existing user config)
-  community.general.git_config:
-    name: "{{ item.name }}"
-    value: "{{ item.value }}"
-    scope: global
-  loop: "{{ git_config }}"
-
 - name: Create .screenrc.d directory
   ansible.builtin.file:
     path: "{{ user_home }}/.screenrc.d"
@@ -112,18 +105,7 @@
     group: "{{ user_name }}"
     backup: true
 
-- name: Verify git configuration was applied
-  ansible.builtin.shell: |
-    set -o pipefail
-    git config --global --get diff.tool || echo "not_set"
-  register: files_git_diff_tool_check
-  changed_when: false
-  failed_when: false
-
-- name: Confirm git configuration setup
-  ansible.builtin.debug:
-    msg: "✓ Git correctly configured with diff tool: {{ files_git_diff_tool_check.stdout }}"
-  when: files_git_diff_tool_check.rc == 0
+## Git configuration validation moved to 'git' role
 
 - name: Set ownership on all files
   ansible.builtin.file:
@@ -177,5 +159,3 @@
       {% for result in files_screen_validation.results %}
       - {{ result.item }}: {{ 'EXISTS' if result.stat.exists else 'MISSING' }}
       {% endfor %}
-
-      Git configuration: CONFIGURED via git_config module (preserves user settings)

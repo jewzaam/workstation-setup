@@ -53,6 +53,7 @@ The `make configure` command launches an interactive picker that lets you select
 
 - **packages** - Install development packages (Python, Go, Git, Cursor, etc.)
 - **files** - Deploy configuration files (.bashrc, .vimrc, .screenrc, etc.)
+- **git** - Configure Git (aliases, colors, difftool, etc.)
 - **system_config** - Configure GNOME for remote access performance
 - **ssh** - Install and configure SSH server for remote access
 - **nomachine** - Install NoMachine for graphical remote desktop access
@@ -65,6 +66,7 @@ Edit `config.yml` to customize your setup:
 packages: true
 files: true
 system_config: true
+git: true
 
 # Optional components
 ssh: false
@@ -99,7 +101,7 @@ make run         # runs with current selections
 
 ### Run with Custom Tags
 ```bash
-make run TAGS=packages,files,system-config
+make run TAGS=packages,files,system-config,git
 make run TAGS=ssh,nomachine
 ```
 

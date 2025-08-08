@@ -14,16 +14,18 @@ def create_default_config():
         'packages': True,
         'files': True,
         'system_config': True,
+        'git': True,
         'ssh': False,
         'nomachine': False,
         'component_descriptions': {
             'packages': 'Install development packages (Python, Go, Git, Cursor, etc.)',
             'files': 'Deploy configuration files (.bashrc, .vimrc, .screenrc, etc.)',
+            'git': 'Configure Git (aliases, colors, difftool, etc.)',
             'system_config': 'Configure GNOME for remote access performance',
             'ssh': 'Install and configure SSH server for remote access',
             'nomachine': 'Install NoMachine for graphical remote desktop access'
         },
-        'default_selections': ['packages', 'files', 'system_config']
+        'default_selections': ['packages', 'files', 'system_config', 'git']
     }
     return default_config
 
@@ -50,6 +52,7 @@ def get_enabled_tags(config):
     tag_mapping = {
         'packages': 'packages',
         'files': 'files', 
+        'git': 'git',
         'system_config': 'system-config',
         'ssh': 'ssh',
         'nomachine': 'nomachine'
@@ -132,7 +135,7 @@ def interactive_picker(config):
             for component in components:
                 selections[component] = False
         elif choice == 'd':
-            defaults = config.get('default_selections', ['packages', 'files', 'system_config'])
+            defaults = config.get('default_selections', ['packages', 'files', 'system_config', 'git'])
             for component in components:
                 selections[component] = component in defaults
         elif choice.isdigit():
