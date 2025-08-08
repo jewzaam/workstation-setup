@@ -151,3 +151,10 @@ gnome_extensions:
   - id: 3010
     name: "system-monitor-next"
     url: "https://extensions.gnome.org/extension/3010/system-monitor-next/"
+
+# Claude Code configuration
+claude_code_install_method: "native"  # Options: native
+# Version options: "stable" (default), "latest", or a specific version like "1.0.58"
+claude_code_version: "stable"
+# Control auto-updates. If false, we disable via config and env during install
+claude_code_auto_updates: true
