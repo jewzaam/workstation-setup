@@ -25,23 +25,3 @@
   become: true
   register: ssh_firewall_result
   notify: Reload firewall
-
-- name: Get SSH service status
-  ansible.builtin.systemd:
-    name: "{{ ssh_service }}"
-  register: ssh_status
-
-- name: Display SSH configuration summary
-  ansible.builtin.debug:
-    msg: |
-      SSH Configuration Complete:
-      ✓ SSH packages installed: {{ ssh_packages | join(', ') }}
-      ✓ SSH service: {{ 'RUNNING' if ssh_status.status.ActiveState == 'active' else 'STOPPED' }}
-      ✓ SSH service enabled: {{ 'YES' if ssh_status.status.UnitFileState == 'enabled' else 'NO' }}
-      ✓ Firewall rule added: {{ ssh_firewall_service }}
-
-      SSH Access Information:
-      - Service: {{ ssh_service }}
-      - Port: 22 (default)
-      - Firewall: {{ ssh_firewall_service }} service enabled
-      - Status: {{ ssh_status.status.ActiveState }}

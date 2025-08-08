@@ -8,6 +8,11 @@
     state: present
   become: true
 
+- name: Check if NoMachine is already installed
+  ansible.builtin.stat:
+    path: /usr/NX/bin/nxserver
+  register: nomachine_installed
+
 - name: Create NoMachine download directory
   ansible.builtin.file:
     path: "{{ nomachine_download_dir }}"
@@ -15,11 +20,7 @@
     mode: "0755"
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
-
-- name: Check if NoMachine is already installed
-  ansible.builtin.stat:
-    path: /usr/NX/bin/nxserver
-  register: nomachine_installed
+  when: not nomachine_installed.stat.exists
 
 - name: Download NoMachine RPM
   ansible.builtin.get_url:
@@ -41,39 +42,10 @@
   when: nomachine_download is succeeded
   register: nomachine_install
 
-- name: Get NoMachine service status
+- name: Ensure NoMachine service is enabled and started
   ansible.builtin.systemd:
     name: nxserver
-  register: nomachine_status
-  when: nomachine_install is succeeded
-
-- name: Display NoMachine installation summary
-  ansible.builtin.debug:
-    msg: |
-      NoMachine Installation Complete:
-      ✓ Dependencies installed: {{ nomachine_packages | join(', ') }}
-      ✓ RPM downloaded: {{ nomachine_rpm_filename }}
-      ✓ NoMachine installed: {{ 'YES' if nomachine_install is succeeded else 'NO' }}
-      ✓ Service status: {{ nomachine_status.status.ActiveState if nomachine_status is defined else 'UNKNOWN' }}
-
-      NoMachine Information:
-      - Version: {{ nomachine_version }}
-      - Architecture: {{ nomachine_arch }}
-      - Install method: {{ nomachine_install_method }}
-      - Download URL: {{ nomachine_download_url }}
-      - Service: nxserver
-      - Default port: 4000
-
-      Access Information:
-      - Connect to: {{ ansible_default_ipv4.address }}:4000
-      - Or use: nxclient (if installed on client)
-  when: nomachine_install is succeeded
-
-- name: NoMachine already installed notice
-  ansible.builtin.debug:
-    msg: |
-      NoMachine already installed:
-      - Service: nxserver
-      - Default port: 4000
-      - Connect to: {{ ansible_default_ipv4.address }}:4000
-  when: nomachine_installed.stat.exists
+    enabled: true
+    state: started
+  become: true
+  when: nomachine_installed.stat.exists or (nomachine_install is defined and nomachine_install is succeeded)
