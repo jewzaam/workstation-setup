@@ -31,6 +31,8 @@
       tags: ssh
     - role: nomachine
       tags: nomachine
+    - role: cursor
+      tags: cursor
 
   post_tasks:
     - name: Display setup completion message
