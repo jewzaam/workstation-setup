@@ -2,7 +2,7 @@
 # Makefile for VM Workstation Setup Ansible Playbook
 
 .DEFAULT_GOAL := help
-.PHONY: help dev-deps collections lint syntax run dry-run clean check-deps run-packages run-dotfiles run-system-config configure show-config info version
+.PHONY: help dev-deps collections lint syntax run dry-run clean check-deps configure show-config info version
 
 # Variables
 ANSIBLE_DIR := ansible
@@ -16,20 +16,14 @@ LIMIT ?=
 VENV_DIR ?= .venv
 PYTHON := $(VENV_DIR)/bin/python
 PIP := $(VENV_DIR)/bin/pip
-ANSIBLE := $(VENV_DIR)/bin/ansible
-ANSIBLE_PLAYBOOK := $(VENV_DIR)/bin/ansible-playbook
-ANSIBLE_GALAXY := $(VENV_DIR)/bin/ansible-galaxy
-ANSIBLE_LINT := $(VENV_DIR)/bin/ansible-lint
 
-# Absolute paths for tools when changing directories during recipes
-ABS_ANSIBLE := $(CURDIR)/$(ANSIBLE)
-ABS_ANSIBLE_PLAYBOOK := $(CURDIR)/$(ANSIBLE_PLAYBOOK)
-ABS_ANSIBLE_GALAXY := $(CURDIR)/$(ANSIBLE_GALAXY)
-ABS_ANSIBLE_LINT := $(CURDIR)/$(ANSIBLE_LINT)
-
-# Collections directory and environment for reproducible installs
+# Project-local Ansible collections location
 COLLECTIONS_DIR := $(CURDIR)/collections
-ANSIBLE_ENV := ANSIBLE_CONFIG=$(CURDIR)/$(ANSIBLE_DIR)/ansible.cfg ANSIBLE_COLLECTIONS_PATH=$(COLLECTIONS_DIR)
+
+# Export common environment for all recipes
+export PATH := $(CURDIR)/$(VENV_DIR)/bin:$(PATH)
+export ANSIBLE_CONFIG := $(CURDIR)/$(ANSIBLE_DIR)/ansible.cfg
+export ANSIBLE_COLLECTIONS_PATH := $(COLLECTIONS_DIR)
 
 help: ## Display this help message
 	@echo "VM Workstation Setup - Ansible Playbook"
@@ -47,9 +41,9 @@ show-config: dev-deps ## Show current configuration
 	@echo "Current configuration:"
 	@$(PYTHON) configure.py --show
 
-run-config: dev-deps ## Run setup with current configuration
+run: syntax collections ## Run setup using current configuration selections
 	@echo "Running setup with current configuration..."
-	@$(PYTHON) -c "import yaml; config=yaml.safe_load(open('config.yml')); tags=[k.replace('_', '-') for k,v in config.items() if v and k not in ['component_descriptions', 'default_selections']]; print('make run TAGS=' + ','.join(tags) if tags else 'make run')" | bash
+	@$(PYTHON) -c "import yaml; config=yaml.safe_load(open('config.yml')); tags=[k.replace('_', '-') for k,v in config.items() if v and k not in ['component_descriptions', 'default_selections']]; print('ansible-playbook -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --ask-become-pass ' + ('--tags ' + ','.join(tags) if tags else ''))" | bash
 
 dev-deps: ## Install development/test dependencies (e.g., ansible-lint) in venv
 	@echo "Setting up Python virtual environment at $(VENV_DIR)..."
@@ -66,57 +60,31 @@ dev-deps: ## Install development/test dependencies (e.g., ansible-lint) in venv
 lint: dev-deps ## Run ansible-lint validation
 	@echo "Running ansible-lint validation..."
 	@echo "Installing collections locally..."
-	@$(ANSIBLE_ENV) $(ANSIBLE_GALAXY) collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
+	@ansible-galaxy collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
 	@echo "Debug: Files to be scanned:"
-	@cd $(ANSIBLE_DIR) && find . -name "*.yml" -o -name "*.yaml" | grep -v gpg/ | head -10
+	@find $(ANSIBLE_DIR) -name "*.yml" -o -name "*.yaml" | grep -v gpg/ | head -10
 	@echo "Running ansible-lint (matching CI behavior)..."
-	@cd $(ANSIBLE_DIR) && $(ANSIBLE_ENV) $(ABS_ANSIBLE_LINT)
+	@ansible-lint $(ANSIBLE_DIR)
 	@echo "✅ Lint validation passed"
 
 collections: dev-deps ## Install required Ansible collections locally
 	@echo "Installing required Ansible collections to $(COLLECTIONS_DIR)..."
-	@$(ANSIBLE_ENV) $(ANSIBLE_GALAXY) collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
+	@ansible-galaxy collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
 	@echo "✅ Collections installed"
 
 syntax: dev-deps collections ## Validate playbook syntax
 	@echo "Checking playbook syntax..."
-	@$(ABS_ANSIBLE_LINT) --version >/dev/null || true
-	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK)
+	@ansible-lint --version >/dev/null || true
+	@ansible-playbook --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK)
 	@echo "✅ Syntax validation passed"
 
 dry-run: check-deps collections ## Run playbook in check mode (dry-run)
 	@echo "Running playbook in check mode (dry-run)..."
-	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) --check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) \
+	@ansible-playbook --check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) \
 		--ask-become-pass \
 		$(if $(TAGS),--tags $(TAGS),) \
 		$(if $(LIMIT),--limit $(LIMIT),)
 	@echo "✅ Dry-run completed"
-
-run: syntax collections ## Complete VM setup (uses current configuration)
-	@echo "Running VM workstation setup with current configuration..."
-	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) \
-		--ask-become-pass \
-		$(if $(TAGS),--tags $(TAGS),) \
-		$(if $(LIMIT),--limit $(LIMIT),)
-
-run-packages: ## Install packages only
-	@$(MAKE) run TAGS=packages
-
-run-dotfiles: collections ## Deploy configuration files only  
-	@echo "Deploying files..."
-	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags files
-
-run-system-config: collections ## Apply system settings only
-	@echo "Applying system configuration..."
-	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags system-config
-
-run-ssh: collections ## Install and configure SSH server
-	@echo "Installing and configuring SSH..."
-	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags ssh --ask-become-pass
-
-run-nomachine: collections ## Install NoMachine for remote desktop
-	@echo "Installing NoMachine..."
-	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags nomachine --ask-become-pass
 
 check-deps: ## Verify all prerequisites are met
 	@echo "Checking for required dependencies..."
@@ -124,8 +92,8 @@ check-deps: ## Verify all prerequisites are met
 		echo "❌ ansible not found. Please install: sudo dnf install ansible"; \
 		exit 1; \
 	}
-	@[ -x $(ANSIBLE_LINT) ] || { \
-		echo "❌ ansible-lint not found in venv. Please run: make dev-deps"; \
+	@command -v ansible-lint >/dev/null 2>&1 || { \
+		echo "❌ ansible-lint not found. Please run: make dev-deps"; \
 		exit 1; \
 	}
 	@command -v python3 >/dev/null 2>&1 || { \
@@ -138,7 +106,7 @@ check-deps: ## Verify all prerequisites are met
 	}
 	@echo "✅ All dependencies found"
 	@echo "Checking system readiness..."
-	@$(ANSIBLE_ENV) $(ABS_ANSIBLE_PLAYBOOK) --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) >/dev/null 2>&1 || { \
+	@ansible-playbook --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) >/dev/null 2>&1 || { \
 		echo "❌ Playbook syntax check failed"; \
 		exit 1; \
 	}
@@ -177,4 +145,4 @@ clean: ## Remove temporary and backup files
 version: ## Display Ansible version
 	@ansible --version
 	@echo ""
-	@$(ANSIBLE_LINT) --version 2>/dev/null || echo "ansible-lint not installed in venv ($(VENV_DIR))"
+	@ansible-lint --version 2>/dev/null || echo "ansible-lint not installed"
