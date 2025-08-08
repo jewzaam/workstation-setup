@@ -88,48 +88,10 @@
         state: present
       when: system_config_terminal_profile.rc == 0 and system_config_terminal_profile.stdout != ""
 
-    - name: Display GNOME settings configured
-      ansible.builtin.debug:
-        msg: |
-          ✓ Screensaver idle activation disabled (no auto-lock)
-          ✓ Session idle delay set to never (no timeout)
-          ✓ Automatic suspend disabled (VM stays active)
-          ✓ Lock enabled on manual suspend/screensaver (security)
-          ✓ Immediate lock when screensaver activates (security)
-          ✓ GNOME animations disabled (performance)
-          ✓ GTK animations disabled (performance)
-          ✓ Font antialiasing set to grayscale (remote performance)
-          ✓ Font hinting optimized for performance
-          ✓ Desktop icons disabled (cleaner experience)
-          ✓ GNOME Terminal transparency disabled (performance)
-
 - name: GNOME not available warning
   ansible.builtin.debug:
     msg: "WARNING: GNOME not detected. Screen lock settings skipped."
   when: system_config_gnome_check.rc != 0
-
-- name: Check for GNOME extensions installation (validation only)
-  ansible.builtin.shell: |
-    if command -v gnome-extensions >/dev/null 2>&1; then
-      gnome-extensions list
-    else
-      echo "gnome-extensions command not available"
-    fi
-  register: system_config_extensions_check
-  failed_when: false
-  changed_when: false
-
-- name: Report GNOME extensions status
-  ansible.builtin.debug:
-    msg: |
-      GNOME Extensions Status:
-      {{ system_config_extensions_check.stdout if system_config_extensions_check.stdout else 'Unable to check extensions' }}
-
-      Required extensions (install manually):
-      {% for ext in gnome_extensions %}
-      - {{ ext.name }}: {{ ext.url }}
-      {% endfor %}
-  when: system_config_gnome_check.rc == 0
 
 - name: Ensure dconf database is updated
   ansible.builtin.command: dconf update
