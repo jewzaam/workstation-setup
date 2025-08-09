@@ -159,3 +159,8 @@ claude_code_install_method: "native"  # Options: native
 claude_code_version: "stable"
 # Control auto-updates. If false, we disable via config and env during install
 claude_code_auto_updates: true
+
+# GNOME favorites (dash) configuration
+gnome_favorite_apps:
+  - org.mozilla.firefox.desktop
+  - org.gnome.Ptyxis.desktop
