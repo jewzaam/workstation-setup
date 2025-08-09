@@ -43,7 +43,17 @@ Automated VM workstation setup using Ansible. Installs packages, deploys files, 
 - `.bashrc_prompt` - Color prompt configuration
 - `.vimrc` - Vim editor configuration with Ruby/YAML support
 - `.screenrc` - GNU Screen configuration
+- `bin/trim` - Utility script to remove trailing whitespace from files
   (Git configuration is applied via Ansible modules)
+
+#### Using the trim utility
+```bash
+# Remove trailing whitespace from a file
+~/bin/trim myfile.txt
+
+# Usage: trim <filename>
+# Edits files in-place to remove trailing spaces and tabs
+```
 
 ### System Configuration
 - **Screen lock disabled** - Prevents VM from locking during remote sessions
@@ -70,6 +80,8 @@ ansible/
     │       ├── bashrc_prompt
     │       ├── vimrc
     │       ├── screenrc
+    │       ├── bin/
+    │       │   └── trim            # Script to remove trailing whitespace
     │       └── gitconfig
     └── system-config/tasks/main.yml # System settings
 ```
