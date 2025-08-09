@@ -108,3 +108,29 @@
   changed_when: true
   when: system_config_gnome_check.rc == 0
   failed_when: false  # Allow to fail since user settings don't require system db updates
+
+- name: Get GNOME Favorites
+  ansible.builtin.command: gsettings get org.gnome.shell favorite-apps
+  register: system_config_gnome_favorites
+  when: system_config_gnome_check.rc == 0
+  failed_when: false
+  changed_when: false
+
+- name: Build desired favorites string (GVariant syntax)
+  ansible.builtin.set_fact:
+    system_config_desired_favorites: "{{ (gnome_favorite_apps | to_json) | replace('\"', \"'\") }}"
+  when: system_config_gnome_check.rc == 0
+
+- name: Set GNOME Favorites if is defaults (Contains Calculator)
+  ansible.builtin.command:
+    argv:
+      - gsettings
+      - set
+      - org.gnome.shell
+      - favorite-apps
+      - "{{ system_config_desired_favorites }}"
+  changed_when: true
+  when:
+    - system_config_gnome_check.rc == 0
+    - system_config_gnome_favorites.stdout is defined
+    - "'Calculator' in system_config_gnome_favorites.stdout"

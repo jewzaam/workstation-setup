@@ -30,7 +30,7 @@
       - "--id"
       - "{{ item.pk | default(item.id) }}"
       - "--enable-after-install"
-      - "{{ (gnome_extensions_enable_after_install | default(false)) | ternary('true','false') }}"
+      - "{{ (gnome_extensions_enable_after_install | default(false)) | ternary('true', 'false') }}"
   register: gnome_extensions_install_outcomes
   changed_when: "'\"installed_now\": true' in (gnome_extensions_install_outcomes.stdout | default(''))"
   failed_when: gnome_extensions_install_outcomes.rc != 0
@@ -39,7 +39,6 @@
   loop: "{{ gnome_extensions_install_list | default([]) }}"
   loop_control:
     label: "pk={{ item.pk | default(item.id) }}"
-
 
 - name: Summary reminder (Wayland re-login)
   ansible.builtin.debug:
