@@ -162,7 +162,7 @@ gnome_extensions_install_list:
   - id: 3010  # system-monitor-next
   - id: 3843  # Just Perfection
   - id: 7855  # Dash in Panel
-  
+
 # Whether to run `gnome-extensions enable <uuid>` after install
 # Note: On Wayland a logout/login may still be required before enabling is effective
 gnome_extensions_enable_after_install: true
