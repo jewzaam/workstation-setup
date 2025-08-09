@@ -43,7 +43,7 @@ show-config: dev-deps ## Show current configuration
 
 run: syntax collections ## Run setup using current configuration selections
 	@echo "Running setup with current configuration..."
-	@$(PYTHON) -c "import yaml; config=yaml.safe_load(open('config.yml')); tags=[k.replace('_', '-') for k,v in config.items() if v and k not in ['component_descriptions', 'default_selections']]; print('ansible-playbook -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --ask-become-pass ' + ('--tags ' + ','.join(tags) if tags else ''))" | bash
+	@$(PYTHON) -c "import yaml; config=yaml.safe_load(open('config.yml')); tags=[k.replace('_', '-') for k,v in config.items() if v and k not in ['component_descriptions', 'default_selections']]; print('ansible-playbook -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) -v --ask-become-pass ' + ('--tags ' + ','.join(tags) if tags else ''))" | bash
 
 dev-deps: ## Install development/test dependencies (e.g., ansible-lint) in venv
 	@echo "Setting up Python virtual environment at $(VENV_DIR)..."
