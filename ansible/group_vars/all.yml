@@ -143,8 +143,6 @@ git_config:
 # GNOME extensions installation list for role gnome_extensions
 # Provide any of the following per entry:
 # - id/pk: the numeric package id from extensions.gnome.org
-# - uuid: explicit uuid (if provided, id is not required)
-# Optionally set download_url to override (not recommended)
 gnome_extensions_install_list:
   - id: 352   # Quick Close in Overview
   - id: 3010  # system-monitor-next
