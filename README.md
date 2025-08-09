@@ -55,6 +55,7 @@ The `make configure` command launches an interactive picker that lets you select
 - **files** - Deploy configuration files (.bashrc, .vimrc, .screenrc, etc.)
 - **git** - Configure Git (aliases, colors, difftool, etc.)
 - **system_config** - Configure GNOME for remote access performance
+- **gnome_extensions** - Install selected GNOME Shell extensions from extensions.gnome.org (user-level)
 - **ssh** - Install and configure SSH server for remote access
 - **nomachine** - Install NoMachine for graphical remote desktop access
 
@@ -130,7 +131,10 @@ make run TAGS=ssh,nomachine
 
 ## Manual Steps After Playbook
 
-Install GNOME extensions via browser:
+GNOME extensions:
+- Automated install (user-level) by role `gnome_extensions` using zips from `extensions.gnome.org`. On Wayland, a logout/login may be required for new extensions to register. See `docs/research/extensions.md`.
+
+Manual install via browser (optional):
 - [Dash in Panel](https://extensions.gnome.org/extension/7855/dash-in-panel/)
 - [Notifications Alert](https://extensions.gnome.org/extension/258/notifications-alert-on-user-menu/)  
 - [System Monitor Next](https://extensions.gnome.org/extension/3010/system-monitor-next/)
@@ -155,9 +159,13 @@ workstation-setup/
     └── roles/             # Organized by function
         ├── packages/      # Package installation
         ├── files/         # Configuration files
-        ├── system-config/ # GNOME optimization
-        ├── ssh/          # SSH server setup
-        └── nomachine/    # NoMachine installation
+        ├── system-config/    # GNOME optimization
+        ├── ssh/              # SSH server setup
+        ├── nomachine/        # NoMachine installation
+        └── gnome_extensions/ # GNOME Shell extensions install role
+docs/
+└── research/
+    └── extensions.md     # GNOME extensions manual + references
 ```
 
 ## Makefile Targets
