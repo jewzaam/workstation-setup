@@ -100,6 +100,10 @@ files:
     dest: .screenrc
     mode: "0644"
     user_managed: false
+  - src: bin/trim
+    dest: bin/trim
+    mode: "0755"
+    user_managed: false
 
 # Git configuration settings (managed separately to preserve user settings)
 git_config:

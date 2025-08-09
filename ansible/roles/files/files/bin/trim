@@ -1,0 +1,19 @@
+#!/bin/bash
+# Trim trailing whitespace from a file in-place
+# Usage: ./trim <filename>
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <filename>"
+    echo "Removes trailing whitespace from the specified file in-place"
+    exit 1
+fi
+
+file="$1"
+
+if [ ! -f "$file" ]; then
+    echo "Error: File '$file' not found"
+    exit 1
+fi
+
+# Use sed to remove trailing whitespace in-place
+sed -i 's/[[:space:]]*$//' "$file"
