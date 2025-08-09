@@ -140,18 +140,6 @@ git_config:
   - name: init.defaultBranch
     value: main
 
-# GNOME extensions for validation (future use)
-gnome_extensions:
-  - id: 7855
-    name: "dash-in-panel"
-    url: "https://extensions.gnome.org/extension/7855/dash-in-panel/"
-  - id: 258
-    name: "notifications-alert-on-user-menu"
-    url: "https://extensions.gnome.org/extension/258/notifications-alert-on-user-menu/"
-  - id: 3010
-    name: "system-monitor-next"
-    url: "https://extensions.gnome.org/extension/3010/system-monitor-next/"
-
 # GNOME extensions installation list for role gnome_extensions
 # Provide any of the following per entry:
 # - id/pk: the numeric package id from extensions.gnome.org
