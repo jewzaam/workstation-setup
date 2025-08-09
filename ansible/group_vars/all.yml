@@ -152,6 +152,21 @@ gnome_extensions:
     name: "system-monitor-next"
     url: "https://extensions.gnome.org/extension/3010/system-monitor-next/"
 
+# GNOME extensions installation list for role gnome_extensions
+# Provide any of the following per entry:
+# - id/pk: the numeric package id from extensions.gnome.org
+# - uuid: explicit uuid (if provided, id is not required)
+# Optionally set download_url to override (not recommended)
+gnome_extensions_install_list:
+  - id: 352   # Quick Close in Overview
+  - id: 3010  # system-monitor-next
+  - id: 3843  # Just Perfection
+  - id: 7855  # Dash in Panel
+  
+# Whether to run `gnome-extensions enable <uuid>` after install
+# Note: On Wayland a logout/login may still be required before enabling is effective
+gnome_extensions_enable_after_install: true
+
 # Claude Code configuration
 claude_code_install_method: "native"  # Options: native
 # Version options: "stable" (default), "latest", or a specific version like "1.0.58"

@@ -50,21 +50,11 @@ Automated VM workstation setup using Ansible. Installs packages, deploys files, 
 - **Idle activation disabled** - Keeps VM active
 - **Suspend disabled** - Prevents automatic sleep
 
-## Manual Steps Required
+## GNOME Extensions
 
-After running the playbook, manually install GNOME extensions:
+This playbook can install user-level GNOME Shell extensions via the `gnome_extensions` role. It downloads the official zips from `extensions.gnome.org`, extracts to `~/.local/share/gnome-shell/extensions/<uuid>/`, and optionally enables them. On Wayland, a logout/login is typically required for the shell to register newly added extensions.
 
-1. **Install via browser:**
-   - [Dash in Panel](https://extensions.gnome.org/extension/7855/dash-in-panel/)
-   - [Notifications Alert](https://extensions.gnome.org/extension/258/notifications-alert-on-user-menu/)
-   - [System Monitor Next](https://extensions.gnome.org/extension/3010/system-monitor-next/)
-
-2. **Configure System Monitor Next:**
-   - CPU: Show Text = false, Graph Width = 50
-   - Memory: Show Text = false, Graph Width = 50  
-   - Net: Show Text = false, Graph Width = 50
-
-3. **Logout and login** to apply all settings
+Configure the list in `group_vars/all.yml` under `gnome_extensions_install_list`. See `docs/research/extensions.md` for manual commands and troubleshooting.
 
 ## File Structure
 ```

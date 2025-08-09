@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  author: jewzaam
+  description: Install GNOME Shell extensions (user-level) from extensions.gnome.org zips
+  min_ansible_version: "2.12"
+  platforms:
+    - name: Fedora
+      versions: [all]
+dependencies: []

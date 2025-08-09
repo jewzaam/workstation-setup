@@ -35,6 +35,8 @@
       tags: cursor
     - role: claude_code
       tags: claude-code
+    - role: gnome_extensions
+      tags: gnome-extensions
 
   post_tasks:
     - name: Display setup completion message

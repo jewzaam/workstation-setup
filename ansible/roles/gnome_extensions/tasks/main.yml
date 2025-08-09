@@ -1,0 +1,132 @@
+---
+# Install GNOME Shell extensions for the current user by downloading zips
+# from extensions.gnome.org and installing via gnome-extensions CLI.
+#
+# Behavior:
+# - Resolves UUID and download_url via the public API using the Shell major version
+# - Downloads to /tmp and installs using `gnome-extensions install <zip>`
+# - Does NOT enable or restart the shell by default (Wayland requires re-login)
+
+- name: Ensure gnome-extensions CLI is available
+  ansible.builtin.command: which gnome-extensions
+  register: gext_cli
+  changed_when: false
+  failed_when: false
+  tags: [gnome-extensions]
+
+- name: Determine GNOME Shell version
+  ansible.builtin.command: gnome-shell --version
+  register: gnome_shell_version_cmd
+  changed_when: false
+  failed_when: false
+  tags: [gnome-extensions]
+
+- name: Extract GNOME Shell major version
+  ansible.builtin.set_fact:
+    gnome_shell_major_version: "{{ (gnome_shell_version_cmd.stdout | default('') | regex_search('([0-9]+)\.[0-9]+| ([0-9]+)\.?', '\\1') ) | default('') | regex_replace('^ +| +$', '') or (gnome_shell_version_cmd.stdout | regex_search(' ([0-9]+)') | regex_replace('^ +','') ) }}"
+  tags: [gnome-extensions]
+
+- name: Ensure user extensions directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/share/gnome-shell/extensions"
+    state: directory
+    mode: "0755"
+  tags: [gnome-extensions]
+
+- name: Resolve extension info from extensions.gnome.org API (by pk/id)
+  ansible.builtin.uri:
+    url: "https://extensions.gnome.org/extension-info/?pk={{ item.pk | default(item.id) }}&shell_version={{ gnome_shell_major_version }}"
+    method: GET
+    return_content: true
+    status_code: 200
+  register: ext_info
+  when:
+    - item.uuid is not defined
+    - (item.pk is defined) or (item.id is defined)
+  loop: "{{ gnome_extensions_install_list | default([]) }}"
+  loop_control:
+    label: "pk={{ item.pk | default(item.id) | default('n/a') }}"
+  tags: [gnome-extensions]
+
+- name: Build extension records combining inputs and resolved info
+  ansible.builtin.set_fact:
+    gnome_extensions_records: "{{
+      (gnome_extensions_records | default([])) + [
+        {
+          'uuid': (item.uuid | default('')) | ternary(item.uuid, (ext_info.results[loop.index0].json.uuid if (ext_info is defined and ext_info.results|length > 0) else '')),
+          'download_url': (item.download_url | default('')) | ternary(item.download_url, ('https://extensions.gnome.org' + (ext_info.results[loop.index0].json.download_url | default(''))) )
+        }
+      ]
+    }}"
+  loop: "{{ gnome_extensions_install_list | default([]) }}"
+  loop_control:
+    label: "uuid={{ item.uuid | default('auto') }} pk={{ item.pk | default(item.id) | default('n/a') }}"
+  tags: [gnome-extensions]
+
+- name: Validate resolved extension data
+  ansible.builtin.assert:
+    that:
+      - item.uuid | length > 0
+      - item.download_url | length > 0
+    fail_msg: "Failed to resolve UUID or download_url for extension entry: {{ item }}"
+  loop: "{{ gnome_extensions_records | default([]) }}"
+  loop_control:
+    label: "uuid={{ item.uuid }}"
+  tags: [gnome-extensions]
+
+- name: Check if extension already installed (by metadata file)
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.local/share/gnome-shell/extensions/{{ item.uuid }}/metadata.json"
+  register: ext_stat
+  loop: "{{ gnome_extensions_records | default([]) }}"
+  loop_control:
+    label: "uuid={{ item.uuid }}"
+  tags: [gnome-extensions]
+
+- name: Download extension zip (only if not installed)
+  ansible.builtin.get_url:
+    url: "{{ item.download_url }}"
+    dest: "/tmp/{{ item.uuid }}.zip"
+    mode: "0644"
+  loop: "{{ gnome_extensions_records | default([]) }}"
+  loop_control:
+    label: "uuid={{ item.uuid }}"
+  when:
+    - gext_cli.rc == 0
+    - not (ext_stat.results[loop.index0].stat.exists | default(false))
+  tags: [gnome-extensions]
+
+- name: Install extension zip using gnome-extensions CLI (only if not installed)
+  ansible.builtin.command: "gnome-extensions install /tmp/{{ item.uuid }}.zip"
+  register: install_results
+  changed_when: not (ext_stat.results[loop.index0].stat.exists | default(false))
+  failed_when: false
+  loop: "{{ gnome_extensions_records | default([]) }}"
+  loop_control:
+    label: "uuid={{ item.uuid }}"
+  when:
+    - gext_cli.rc == 0
+    - not (ext_stat.results[loop.index0].stat.exists | default(false))
+  tags: [gnome-extensions]
+
+- name: Optionally enable extension (disabled by default)
+  ansible.builtin.command: "gnome-extensions enable {{ item.uuid }}"
+  changed_when: true
+  failed_when: false
+  loop: "{{ gnome_extensions_records | default([]) }}"
+  loop_control:
+    label: "uuid={{ item.uuid }}"
+  when:
+    - gnome_extensions_enable_after_install | default(false)
+    - gext_cli.rc == 0
+    - install_results is defined
+    - install_results.results[loop.index0] is defined
+    - not (install_results.results[loop.index0].skipped | default(false))
+    - (install_results.results[loop.index0].rc | default(1)) == 0
+  tags: [gnome-extensions]
+
+- name: Reminder - Re-login may be required on Wayland for new extensions to register
+  ansible.builtin.debug:
+    msg: "Installed GNOME extensions for user. If using Wayland, logout/login to register new extensions before enabling."
+  tags: [gnome-extensions]
+

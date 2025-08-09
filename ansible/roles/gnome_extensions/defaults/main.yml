@@ -1,0 +1,4 @@
+---
+# Default variables for gnome_extensions role
+gnome_extensions_install_list: []
+gnome_extensions_enable_after_install: false
