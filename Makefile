@@ -2,7 +2,7 @@
 # Makefile for VM Workstation Setup Ansible Playbook
 
 .DEFAULT_GOAL := help
-.PHONY: help dev-deps collections lint lint-python lint-ansible syntax run dry-run clean check-deps configure show-config info version
+.PHONY: help pip-install-dev collections lint lint-python lint-ansible syntax run dry-run clean check-deps configure show-config info version
 
 # Variables
 ANSIBLE_DIR := ansible
@@ -16,6 +16,7 @@ LIMIT ?=
 VENV_DIR ?= .venv
 PYTHON := $(VENV_DIR)/bin/python
 PIP := $(VENV_DIR)/bin/pip
+UV := $(VENV_DIR)/bin/uv
 
 # Project-local Ansible collections location
 COLLECTIONS_DIR := $(CURDIR)/collections
@@ -33,11 +34,11 @@ help: ## Display this help message
 	@echo ""
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-configure: dev-deps ## Interactive configuration picker
+configure: pip-install-dev ## Interactive configuration picker
 	@echo "Running configuration picker..."
 	@$(PYTHON) configure.py
 
-show-config: dev-deps ## Show current configuration
+show-config: pip-install-dev ## Show current configuration
 	@echo "Current configuration:"
 	@$(PYTHON) configure.py --show
 
@@ -45,27 +46,38 @@ run: syntax collections ## Run setup using current configuration selections
 	@echo "Running setup with current configuration..."
 	@$(PYTHON) -c "import yaml; config=yaml.safe_load(open('config.yml')); tags=[k.replace('_', '-') for k,v in config.items() if v and k not in ['component_descriptions', 'default_selections']]; print('ansible-playbook -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --ask-become-pass ' + ('--tags ' + ','.join(tags) if tags else ''))" | bash
 
-dev-deps: ## Install development/test dependencies (e.g., ansible-lint) in venv
-	@echo "Setting up Python virtual environment at $(VENV_DIR)..."
-	@command -v python3 >/dev/null 2>&1 || { \
-		echo "❌ python3 not found. Please install: sudo dnf install python3"; \
-		exit 1; \
-	}
-	@test -d $(VENV_DIR) || python3 -m venv $(VENV_DIR)
-	@$(PIP) install --upgrade pip >/dev/null
+.PHONY: venv
+venv: ## Create Python virtual environment
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		printf "$(BLUE)Creating virtual environment...$(RESET)\n"; \
+		python3 -m venv $(VENV_DIR); \
+		printf "$(GREEN)✅ Virtual environment created$(RESET)\n"; \
+	fi
+
+.PHONY: uv # Install uv
+uv: venv
+	@if [ ! -f "$(VENV_DIR)/bin/uv" ]; then \
+		printf "$(BLUE)Installing uv...$(RESET)\n"; \
+		$(PYTHON) -m ensurepip --upgrade; \
+		$(PYTHON) -m pip install uv; \
+		printf "$(GREEN)✅ uv installed$(RESET)\n"; \
+	fi
+
+pip-install-dev: uv ## Install development/test dependencies (e.g., ansible-lint) in venv
+	@$(UV) pip install --upgrade pip >/dev/null
 	@echo "Installing development/test dependencies..."
-	@$(PIP) install -r requirements-dev.txt
+	@$(UV) pip install -r requirements-dev.txt
 	@echo "✅ Dev/test dependencies installed in $(VENV_DIR)"
 
-lint: dev-deps lint-python lint-ansible ## Run all linting
+lint: pip-install-dev lint-python lint-ansible ## Run all linting
 	@echo "✅ All linting passed"
 
-lint-python: ## Lint Python files with ruff
+lint-python: pip-install-dev ## Lint Python files with ruff
 	@echo "Running ruff on Python files..."
 	@ruff check configure.py
 	@echo "✅ Python lint passed"
 
-lint-ansible: ## Run ansible-lint validation
+lint-ansible: pip-install-dev ## Run ansible-lint validation
 	@echo "Running ansible-lint validation..."
 	@echo "Installing collections locally..."
 	@ansible-galaxy collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
@@ -75,12 +87,12 @@ lint-ansible: ## Run ansible-lint validation
 	@ansible-lint $(ANSIBLE_DIR)
 	@echo "✅ Ansible lint passed"
 
-collections: dev-deps ## Install required Ansible collections locally
+collections: pip-install-dev ## Install required Ansible collections locally
 	@echo "Installing required Ansible collections to $(COLLECTIONS_DIR)..."
 	@ansible-galaxy collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
 	@echo "✅ Collections installed"
 
-syntax: dev-deps collections ## Validate playbook syntax
+syntax: pip-install-dev collections ## Validate playbook syntax
 	@echo "Checking playbook syntax..."
 	@ansible-lint --version >/dev/null || true
 	@ansible-playbook --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK)
@@ -101,7 +113,7 @@ check-deps: ## Verify all prerequisites are met
 		exit 1; \
 	}
 	@command -v ansible-lint >/dev/null 2>&1 || { \
-		echo "❌ ansible-lint not found. Please run: make dev-deps"; \
+		echo "❌ ansible-lint not found. Please run: make pip-install-dev"; \
 		exit 1; \
 	}
 	@command -v python3 >/dev/null 2>&1 || { \
@@ -109,7 +121,7 @@ check-deps: ## Verify all prerequisites are met
 		exit 1; \
 	}
 	@$(PYTHON) -c "import yaml" 2>/dev/null || { \
-		echo "❌ PyYAML not available in venv. Ensure dev-deps installed: make dev-deps"; \
+		echo "❌ PyYAML not available in venv. Ensure pip-install-dev installed: make pip-install-dev"; \
 		exit 1; \
 	}
 	@echo "✅ All dependencies found"
