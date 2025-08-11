@@ -1,2 +1,2 @@
-source ~/.screenrc/00-user
-source ~/.screenrc/99-base
+source ~/.screenrc.d/00-user
+source ~/.screenrc.d/99-base
