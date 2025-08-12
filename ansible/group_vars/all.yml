@@ -184,6 +184,12 @@ samba_inherit_owner: true
 samba_inherit_permissions: true
 samba_initial_password: "samba"
 
+# Post-setup reminders for each role
+role_reminders:
+  samba: "run 'make samba-password' to set your Samba password"
+  gnome_extensions: "logout and login again to apply all GNOME Extensions"
+  files: "restart your terminal or run 'source ~/.bashrc'"
+
 # GNOME favorites (dash) configuration
 gnome_favorite_apps:
   - org.mozilla.firefox.desktop

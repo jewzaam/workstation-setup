@@ -76,23 +76,19 @@ def get_role_description(role_name: str) -> str:
     return role_name
 
 
-def get_role_reminders(role_name: str) -> list:
-    """Get reminders for a role from its metadata file."""
-    role_dir = Path("ansible/roles") / role_name
-    meta_file = role_dir / "meta" / "main.yml"
+def get_role_reminders(role_name: str) -> str:
+    """Get reminders for a role from global variables."""
+    try:
+        # Load the global vars file
+        vars_file = Path("ansible/group_vars/all.yml")
+        if vars_file.exists():
+            vars_data = yaml.safe_load(vars_file.read_text()) or {}
+            role_reminders = vars_data.get("role_reminders", {})
+            return role_reminders.get(role_name, "")
+    except Exception:
+        pass
     
-    if meta_file.exists():
-        try:
-            meta = yaml.safe_load(meta_file.read_text()) or {}
-            reminders = meta.get("galaxy_info").get("reminders", [])
-            if isinstance(reminders, str):
-                return reminders
-            elif isinstance(reminders, list):
-                return ", ".join(reminders)
-        except Exception:
-            pass
-    
-    return []
+    return ""
 
 
 def load_config():
@@ -171,9 +167,9 @@ def display_reminders(config):
     enabled_components = [k for k, v in config.items() if v]
     
     for component in enabled_components:
-        reminders = get_role_reminders(component)
-        if reminders:
-            print(f"🔔 {component.replace('_', ' ').title()}: {reminders}")
+        reminder = get_role_reminders(component)
+        if reminder:
+            print(f"{component}: {reminder}")
 
 
 def main():
