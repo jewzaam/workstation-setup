@@ -104,6 +104,7 @@ make run         # runs with current selections
 ```bash
 make run TAGS=packages,files,system-config,git
 make run TAGS=ssh,nomachine
+make run TAGS=samba
 ```
 
 ## What Gets Automated
@@ -128,6 +129,15 @@ make run TAGS=ssh,nomachine
 - **Install**: RPM installation with proper dependencies
 - **Service**: nxserver service management
 - **Access**: Port 4000 for graphical remote desktop
+
+#### Samba File Sharing (Optional)
+- **Packages**: samba, samba-client, samba-common
+- **Share**: Creates `$HOME/shared` directory accessible as `$(hostname)-shared`
+- **Authentication**: Uses system username/password via PAM integration
+- **Access**: Full read/write access for authenticated users
+- **Network**: Visible in Windows Network Neighborhood, accessible via SMB/CIFS
+- **Firewall**: Automatically opens ports 139/tcp and 445/tcp
+- **Service**: Starts and enables Samba services on boot
 
 ## Manual Steps After Playbook
 
@@ -162,6 +172,7 @@ workstation-setup/
         ├── system-config/    # GNOME optimization
         ├── ssh/              # SSH server setup
         ├── nomachine/        # NoMachine installation
+        ├── samba/            # Samba file sharing setup
         └── gnome_extensions/ # GNOME Shell extensions install role
 docs/
 └── research/
@@ -200,6 +211,19 @@ ssh username@vm-ip-address
 ### SPICE Access (for libvirt VMs)
 See `VM-Management.md` for detailed SPICE tunneling setup.
 
+### Samba File Sharing (if enabled)
+```bash
+# From Windows machine
+# Browse to: \\vm-ip-address\vm-hostname-shared
+# Or use: \\vm-ip-address\vm-hostname-shared
+
+# From Linux/macOS machine
+# Mount: smb://vm-ip-address/vm-hostname-shared
+# Or: mount -t cifs //vm-ip-address/vm-hostname-shared /mnt/mountpoint -o username=your_username
+```
+
+**Note**: The share uses PAM authentication, so use your system username and password when prompted.
+
 ## Requirements Reference
 
 **Original automation requirements:**
@@ -209,4 +233,5 @@ See `VM-Management.md` for detailed SPICE tunneling setup.
 - Assumes repository is checked out
 - **New**: Configuration-driven component selection via tags
 - **New**: Optional SSH and NoMachine installation
+- **New**: Optional Samba file sharing setup
 - **New**: Static Ansible content with tag-based execution
