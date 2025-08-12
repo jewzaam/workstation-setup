@@ -168,6 +168,21 @@ claude_code_version: "stable"
 # Control auto-updates. If false, we disable via config and env during install
 claude_code_auto_updates: true
 
+# Samba file sharing configuration
+samba_enabled: true
+samba_share_name: "{{ ansible_hostname }}-shared"
+samba_share_path: "{{ user_home }}/shared"
+samba_share_comment: "Shared directory for network access"
+samba_browseable: true
+samba_guest_ok: false
+samba_writable: true
+samba_create_mask: "0644"
+samba_directory_mask: "0755"
+samba_force_user: "{{ user_name }}"
+samba_force_group: "{{ user_name }}"
+samba_inherit_owner: true
+samba_inherit_permissions: true
+
 # GNOME favorites (dash) configuration
 gnome_favorite_apps:
   - org.mozilla.firefox.desktop

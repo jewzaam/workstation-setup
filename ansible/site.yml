@@ -37,6 +37,8 @@
       tags: claude-code
     - role: gnome_extensions
       tags: gnome-extensions
+    - role: samba
+      tags: samba
 
   post_tasks:
     - name: Display setup completion message
