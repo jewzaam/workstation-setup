@@ -182,6 +182,7 @@ samba_force_user: "{{ user_name }}"
 samba_force_group: "{{ user_name }}"
 samba_inherit_owner: true
 samba_inherit_permissions: true
+samba_initial_password: "samba"
 
 # GNOME favorites (dash) configuration
 gnome_favorite_apps:

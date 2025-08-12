@@ -6,6 +6,7 @@ include make/env.mk
 include make/ansible.mk
 include make/lint.mk
 include make/config.mk
+include make/samba.mk
 
 .DEFAULT_GOAL := help
 .PHONY: help
