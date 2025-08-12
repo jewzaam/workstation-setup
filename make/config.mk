@@ -9,3 +9,6 @@ configure: pip-install-dev ## Interactive configuration picker
 show-config: pip-install-dev ## Show current configuration
 	@echo "Current configuration:"
 	@$(PYTHON) configure.py --show
+
+reminders: pip-install-dev ## Show post-setup reminders
+	@$(PYTHON) configure.py --reminders

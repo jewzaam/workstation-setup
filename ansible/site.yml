@@ -39,26 +39,3 @@
       tags: gnome-extensions
     - role: samba
       tags: samba
-
-  post_tasks:
-    - name: Display setup completion message
-      ansible.builtin.debug:
-        msg: |
-          =====================================
-          VM Workstation Setup Complete!
-          =====================================
-
-          Manual steps remaining:
-          1. Install GNOME Extensions via browser:
-             - https://extensions.gnome.org/extension/7855/dash-in-panel/
-             - https://extensions.gnome.org/extension/258/notifications-alert-on-user-menu/
-             - https://extensions.gnome.org/extension/3010/system-monitor-next/
-
-          2. Configure System Monitor Next extension:
-             - CPU: Show Text = false, Graph Width = 50
-             - Memory: Show Text = false, Graph Width = 50
-             - Net: Show Text = false, Graph Width = 50
-
-          3. Logout and login again to apply all settings
-
-          =====================================

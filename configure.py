@@ -76,6 +76,25 @@ def get_role_description(role_name: str) -> str:
     return role_name
 
 
+def get_role_reminders(role_name: str) -> list:
+    """Get reminders for a role from its metadata file."""
+    role_dir = Path("ansible/roles") / role_name
+    meta_file = role_dir / "meta" / "main.yml"
+    
+    if meta_file.exists():
+        try:
+            meta = yaml.safe_load(meta_file.read_text()) or {}
+            reminders = meta.get("galaxy_info").get("reminders", [])
+            if isinstance(reminders, str):
+                return reminders
+            elif isinstance(reminders, list):
+                return ", ".join(reminders)
+        except Exception:
+            pass
+    
+    return []
+
+
 def load_config():
     """Load configuration from config.yml, or return an empty selection map.
 
@@ -148,13 +167,26 @@ def interactive_picker(config):
     return {component: (component in selected) for component in components}
 
 
+def display_reminders(config):
+    enabled_components = [k for k, v in config.items() if v]
+    
+    for component in enabled_components:
+        reminders = get_role_reminders(component)
+        if reminders:
+            print(f"🔔 {component.replace('_', ' ').title()}: {reminders}")
+
+
 def main():
     """Main configuration function"""
     config = load_config()
 
-    if len(sys.argv) > 1 and sys.argv[1] == "--show":
-        display_menu(config)
-        return
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--show":
+            display_menu(config)
+            return
+        elif sys.argv[1] == "--reminders":
+            display_reminders(config)
+            return
 
     print("VM Workstation Configuration Tool")
     print("This tool helps you select which components to install.")

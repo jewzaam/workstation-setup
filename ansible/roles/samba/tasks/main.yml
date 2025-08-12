@@ -19,6 +19,18 @@
     owner: "{{ user_name }}"
     group: "{{ user_name }}"
 
+- name: Set SELinux context for Samba share
+  ansible.builtin.command: semanage fcontext -a -t samba_share_t "{{ samba_share_path }}(/.*)?"
+  become: true
+  register: samba_selinux_context_result
+  failed_when: false
+  changed_when: samba_selinux_context_result.rc == 0
+
+- name: Apply SELinux context
+  ansible.builtin.command: restorecon -Rv "{{ samba_share_path }}"
+  become: true
+  changed_when: true
+
 - name: Configure Samba global settings
   ansible.builtin.template:
     src: smb.conf.j2
@@ -42,18 +54,27 @@
   become: true
   when: samba_config_validation.rc == 0
 
-# Create Samba user account using pdbedit (Samba 4.x method)
+# Check if Samba user exists
+- name: Check if Samba user exists
+  ansible.builtin.command: "pdbedit -L | grep -q '^{{ user_name }}$'"
+  become: true
+  register: samba_user_exists
+  failed_when: false
+  changed_when: false
+
+# Create Samba user account only if it doesn't exist
 - name: Create Samba user account
-  ansible.builtin.command: "pdbedit -a {{ user_name }} -t"
+  ansible.builtin.command: "echo '{{ samba_initial_password }}' | smbpasswd -a {{ user_name }} -s"
   become: true
   register: samba_user_result
   failed_when: false
   changed_when: samba_user_result.rc == 0
+  when: not samba_user_exists.rc == 0
 
-# Note: User is created with no password. You'll need to set a password manually:
+# Note: User is created with no password initially. You'll need to set a password manually:
 # sudo smbpasswd jewzaam
 # This creates a separate Samba password for network access
-# The -t flag creates a machine trust account which is more appropriate for file sharing
+# The -n flag creates the user without a password, which you then set manually
 
 - name: Enable Samba services
   ansible.builtin.systemd:
