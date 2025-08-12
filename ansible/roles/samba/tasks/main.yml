@@ -56,7 +56,7 @@
 
 # Check if Samba user exists
 - name: Check if Samba user exists
-  ansible.builtin.command: "pdbedit -L | grep -q '^{{ user_name }}$'"
+  ansible.builtin.command: "pdbedit -L | grep -q '^{{ user_name }}$' || true"
   become: true
   register: samba_user_exists
   failed_when: false
