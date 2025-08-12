@@ -169,8 +169,7 @@ def display_reminders(config):
     for component in enabled_components:
         reminder = get_role_reminders(component)
         if reminder:
-            print(f"{component}: {reminder}")
-
+            print(f"🔔 {component.replace('_', ' ').title()}: {reminder}")
 
 def main():
     """Main configuration function"""
