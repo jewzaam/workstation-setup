@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# add a remote for a fork based on existing remotes and a given github user name
+
+GITHUB_USER=$1
+REMOTE_NAME=$2
+
+if [ -z "$GITHUB_USER" ];
+then
+    echo "Usage: $0 <github user> [remote name]"
+    echo "  remote name - default is to use same value as 'github user'"
+    exit 1
+fi
+
+if [ -z "$REMOTE_NAME" ];
+then
+    REMOTE_NAME=$GITHUB_USER
+fi
+
+# try with http and ssh format
+REMOTE_SEARCH=origin
+
+if [ "$(git remote -v | grep fetch | grep $REMOTE_NAME | wc -l)" == "1" ];
+then
+    exit
+fi
+
+(git remote -v | grep fetch | grep $REMOTE_SEARCH | awk '{print $2}' | sed "s|[^:/]*://\([^/]*\)/\([^/]*\)/\(.*\)|git remote add ${REMOTE_NAME} git@\1:${GITHUB_USER}/\3|g" | sed 's/\(.*\)\.git$/\1/g' | sed 's|\(.*\)/$|\1|g' | grep "git remote add" || git remote -v | grep fetch | grep $REMOTE_SEARCH | awk '{print $2}' | sed "s|[^@]*@\([^:]*\):\([^
+/]*\)/\(.*\)|git remote add ${REMOTE_NAME} git@\1:${GITHUB_USER}/\3|g") | sh
+
+git remote -v
+
+git fetch $REMOTE_NAME || (echo "ERROR, removing remote" && git remote rm $REMOTE_NAME && exit 1)
