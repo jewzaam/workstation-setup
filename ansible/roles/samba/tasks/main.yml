@@ -57,21 +57,25 @@
 
 # Check if Samba user exists
 - name: Check if Samba user exists
-  ansible.builtin.shell: "pdbedit -L | grep -q '^{{ user_name }}:'"
+  ansible.builtin.command: "pdbedit -L"
   become: true
-  register: samba_user_exists
+  register: samba_user_list
   failed_when: false
   changed_when: false
 
+- name: Set user existence fact
+  ansible.builtin.set_fact:
+    samba_user_exists: "{{ user_name in samba_user_list.stdout }}"
+
 # Create Samba user account only if it doesn't exist
 - name: Create Samba user account
-  ansible.builtin.command: >
-    echo '{{ samba_initial_password }}' | smbpasswd -a {{ user_name }} -s
+  ansible.builtin.shell: >
+    /usr/bin/smbpasswd -a {{ user_name }} <<< '{{ samba_initial_password }}'
   become: true
   register: samba_user_result
   failed_when: samba_user_result.rc != 0
   changed_when: samba_user_result.rc == 0
-  when: samba_user_exists.rc != 0
+  when: not samba_user_exists
 
 # Note: User is created with initial password from config.
 # You can change it later using:
