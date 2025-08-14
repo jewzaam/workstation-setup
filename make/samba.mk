@@ -4,4 +4,18 @@
 .PHONY: samba-password
 
 samba-password: ## Set Samba password for current user
-	@sudo smbpasswd $(USER)
+	@if [ -x "$(HOME)/bin/samba-password" ]; then \
+		$(HOME)/bin/samba-password; \
+	elif command -v smbpasswd >/dev/null 2>&1; then \
+		echo "Checking if Samba user $(USER) exists..."; \
+		if sudo pdbedit -L | grep -q "^$(USER):"; then \
+			echo "✓ Samba user $(USER) exists. Setting password..."; \
+			sudo smbpasswd $(USER); \
+		else \
+			echo "⚠ Samba user $(USER) does not exist. Creating user and setting password..."; \
+			sudo smbpasswd -a $(USER); \
+		fi; \
+	else \
+		echo "Error: Samba is not installed. Please install samba first."; \
+		exit 1; \
+	fi
