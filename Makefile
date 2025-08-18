@@ -141,7 +141,7 @@ clean: ## Remove temporary and backup files
 	# Ansible retry/logs and ansible temp dirs
 	@find . -name "*.retry" -delete 2>/dev/null || true
 	@rm -f $(ANSIBLE_DIR)/ansible.log 2>/dev/null || true
-	@rm -rf .ansible 2>/dev/null || true
+	@rm -rf $(ANSIBLE_DIR)/.ansible 2>/dev/null || true
 	# Local collections cache
 	@rm -rf collections 2>/dev/null || true
 	# Python virtual environment
