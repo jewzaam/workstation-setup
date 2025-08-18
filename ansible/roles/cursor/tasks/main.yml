@@ -102,9 +102,10 @@
   when: not cursor_settings_file_stat.stat.exists
 
 - name: Create temporary directory for cursor configuration
-  ansible.builtin.shell: mktemp -d
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: cursor_config
   register: cursor_temp_dir
-  changed_when: false
 
 - name: Create performance settings template
   ansible.builtin.copy:
@@ -140,13 +141,15 @@
           "**/*.pyc": true
         }
       }
-    dest: "{{ cursor_temp_dir.stdout }}/cursor_performance_settings.json"
+    dest: "{{ cursor_temp_dir.path }}/cursor_performance_settings.json"
     mode: "0644"
 
 - name: Merge performance settings with existing Cursor settings
   ansible.builtin.shell: |
-    if jq -s '.[0] * .[1]' "{{ cursor_settings_file }}" "{{ cursor_temp_dir.stdout }}/cursor_performance_settings.json" > "{{ cursor_temp_dir.stdout }}/merged_settings.json"; then
-      mv "{{ cursor_temp_dir.stdout }}/merged_settings.json" "{{ cursor_settings_file }}"
+    temp_settings="{{ cursor_temp_dir.path }}/cursor_performance_settings.json"
+    temp_merged="{{ cursor_temp_dir.path }}/merged_settings.json"
+    if jq -s '.[0] * .[1]' "{{ cursor_settings_file }}" "$temp_settings" > "$temp_merged"; then
+      mv "$temp_merged" "{{ cursor_settings_file }}"
       echo "Successfully merged Cursor performance settings"
     else
       echo "Failed to merge JSON settings" >&2
@@ -154,11 +157,11 @@
     fi
   args:
     executable: /bin/bash
-  register: merge_result
-  failed_when: merge_result.rc != 0
+  register: cursor_merge_result
+  failed_when: cursor_merge_result.rc != 0
   changed_when: true
 
 - name: Clean up temporary directory
   ansible.builtin.file:
-    path: "{{ cursor_temp_dir.stdout }}"
+    path: "{{ cursor_temp_dir.path }}"
     state: absent
