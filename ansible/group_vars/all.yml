@@ -46,6 +46,10 @@ cursor_desktop_file: "/usr/share/applications/cursor.desktop"
 cursor_icon_url: "https://www.cursor.com/brand/icon.png"
 cursor_icon_file: "/usr/share/pixmaps/cursor.png"
 
+# Cursor configuration for performance optimization
+cursor_config_dir: "{{ ansible_env.HOME }}/.config/Cursor/User"
+cursor_settings_file: "{{ cursor_config_dir }}/settings.json"
+
 # User directories
 user_home: "{{ ansible_env.HOME }}"
 user_name: "{{ ansible_env.USER }}"

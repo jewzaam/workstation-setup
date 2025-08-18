@@ -75,3 +75,93 @@
   become: true
   when: cursor_download is succeeded
   changed_when: true
+
+# Cursor configuration for performance optimization
+- name: Ensure jq is installed for JSON manipulation
+  ansible.builtin.package:
+    name: jq
+    state: present
+  become: true
+
+- name: Create Cursor config directory if it doesn't exist
+  ansible.builtin.file:
+    path: "{{ cursor_config_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Check if Cursor settings file exists
+  ansible.builtin.stat:
+    path: "{{ cursor_settings_file }}"
+  register: cursor_settings_file_stat
+
+- name: Create empty settings file if it doesn't exist
+  ansible.builtin.copy:
+    content: "{}"
+    dest: "{{ cursor_settings_file }}"
+    mode: "0644"
+  when: not cursor_settings_file_stat.stat.exists
+
+- name: Create temporary directory for cursor configuration
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: cursor_config
+  register: cursor_temp_dir
+
+- name: Create performance settings template
+  ansible.builtin.copy:
+    content: |
+      {
+        "files.watcherExclude": {
+          "**/__pycache__/**": true,
+          "**/venv/**": true,
+          "**/.venv/**": true,
+          "**/node_modules/**": true,
+          "**/htmlcov/**": true,
+          "**/*.pyc": true,
+          "**/.pytest_cache/**": true,
+          "**/coverage.xml": true,
+          "**/.coverage": true,
+          "**/dist/**": true,
+          "**/build/**": true,
+          "**/*.egg-info/**": true
+        },
+        "search.exclude": {
+          "**/__pycache__": true,
+          "**/venv": true,
+          "**/.venv": true,
+          "**/node_modules": true,
+          "**/htmlcov": true,
+          "**/.pytest_cache": true,
+          "**/dist": true,
+          "**/build": true,
+          "**/*.egg-info": true
+        },
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/*.pyc": true
+        }
+      }
+    dest: "{{ cursor_temp_dir.path }}/cursor_performance_settings.json"
+    mode: "0644"
+
+- name: Merge performance settings with existing Cursor settings
+  ansible.builtin.shell: |
+    temp_settings="{{ cursor_temp_dir.path }}/cursor_performance_settings.json"
+    temp_merged="{{ cursor_temp_dir.path }}/merged_settings.json"
+    if jq -s '.[0] * .[1]' "{{ cursor_settings_file }}" "$temp_settings" > "$temp_merged"; then
+      mv "$temp_merged" "{{ cursor_settings_file }}"
+      echo "Successfully merged Cursor performance settings"
+    else
+      echo "Failed to merge JSON settings" >&2
+      exit 1
+    fi
+  args:
+    executable: /bin/bash
+  register: cursor_merge_result
+  failed_when: cursor_merge_result.rc != 0
+  changed_when: true
+
+- name: Clean up temporary directory
+  ansible.builtin.file:
+    path: "{{ cursor_temp_dir.path }}"
+    state: absent
