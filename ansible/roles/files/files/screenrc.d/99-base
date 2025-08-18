@@ -144,7 +144,7 @@ bind ^] paste [.]
 # From: http://clearspace.knowledge.str.redhat.com/docs/DOC-1418
 # Set the caption on the bottom line
 #caption always " | %-w%{= BW}%50>%n %t%{-}%+w |%<"
- 
+
 # Create a caption line similar to what C-A w displays.
 #caption always "%{.bW}%-Lw%{.rW}%n %t%{-}%+Lw %=%{..G} %H %{..Y} %m/%d %c "
 #caption always "%{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?% %=%{G}%H %{B}%m/%d %{W}%C%{g}"

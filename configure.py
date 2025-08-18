@@ -76,6 +76,21 @@ def get_role_description(role_name: str) -> str:
     return role_name
 
 
+def get_role_reminders(role_name: str) -> str:
+    """Get reminders for a role from global variables."""
+    try:
+        # Load the global vars file
+        vars_file = Path("ansible/group_vars/all.yml")
+        if vars_file.exists():
+            vars_data = yaml.safe_load(vars_file.read_text()) or {}
+            role_reminders = vars_data.get("role_reminders", {})
+            return role_reminders.get(role_name, "")
+    except Exception:
+        pass
+    
+    return ""
+
+
 def load_config():
     """Load configuration from config.yml, or return an empty selection map.
 
@@ -148,13 +163,25 @@ def interactive_picker(config):
     return {component: (component in selected) for component in components}
 
 
+def display_reminders(config):
+    enabled_components = [k for k, v in config.items() if v]
+    
+    for component in enabled_components:
+        reminder = get_role_reminders(component)
+        if reminder:
+            print(f"🔔 {component.replace('_', ' ').title()}: {reminder}")
+
 def main():
     """Main configuration function"""
     config = load_config()
 
-    if len(sys.argv) > 1 and sys.argv[1] == "--show":
-        display_menu(config)
-        return
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--show":
+            display_menu(config)
+            return
+        elif sys.argv[1] == "--reminders":
+            display_reminders(config)
+            return
 
     print("VM Workstation Configuration Tool")
     print("This tool helps you select which components to install.")

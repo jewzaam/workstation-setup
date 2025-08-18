@@ -54,7 +54,7 @@ cursor_settings_file: "{{ cursor_config_dir }}/settings.json"
 user_home: "{{ ansible_env.HOME }}"
 user_name: "{{ ansible_env.USER }}"
 
-# Files to deploy
+# Files to deploy, use type: directory to create a directory
 files:
   - src: bashrc
     dest: .bashrc
@@ -76,6 +76,10 @@ files:
     dest: .bashrc.d/20-aliases
     mode: "0644"
     user_managed: false
+  - src: bashrc.d/25-cursor
+    dest: .bashrc.d/25-cursor
+    mode: "0644"
+    user_managed: false
   - src: bashrc.d/30-functions
     dest: .bashrc.d/30-functions
     mode: "0644"
@@ -92,21 +96,21 @@ files:
     dest: .bashrc.d/99-user
     mode: "0644"
     user_managed: true
-  - src: screenrc.d/base
-    dest: .screenrc.d/base
+  - src: screenrc.d/99-base
+    dest: .screenrc.d/99-base
     mode: "0644"
     user_managed: false
-  - src: screenrc.d/user.example
-    dest: .screenrc.d/user
+  - src: screenrc.d/00-user.example
+    dest: .screenrc.d/00-user
     mode: "0644"
     user_managed: true
   - src: screenrc
     dest: .screenrc
     mode: "0644"
     user_managed: false
-  - src: bin/trim
-    dest: bin/trim
-    mode: "0755"
+  - src: bin
+    dest: bin
+    type: directory
     user_managed: false
 
 # Git configuration settings (managed separately to preserve user settings)
@@ -167,6 +171,28 @@ claude_code_install_method: "native"  # Options: native
 claude_code_version: "stable"
 # Control auto-updates. If false, we disable via config and env during install
 claude_code_auto_updates: true
+
+# Samba file sharing configuration
+samba_enabled: true
+samba_share_name: "{{ ansible_hostname }}-shared"
+samba_share_path: "{{ user_home }}/shared"
+samba_share_comment: "Shared directory for network access"
+samba_browseable: true
+samba_guest_ok: false
+samba_writable: true
+samba_create_mask: "0644"
+samba_directory_mask: "0755"
+samba_force_user: "{{ user_name }}"
+samba_force_group: "{{ user_name }}"
+samba_inherit_owner: true
+samba_inherit_permissions: true
+samba_initial_password: "samba"
+
+# Post-setup reminders for each role
+role_reminders:
+  samba: "run 'make samba-password' to set your Samba password"
+  gnome_extensions: "logout and login again to apply all GNOME Extensions"
+  files: "restart your terminal or run 'source ~/.bashrc'"
 
 # GNOME favorites (dash) configuration
 gnome_favorite_apps:

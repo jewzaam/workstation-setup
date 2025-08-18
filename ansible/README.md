@@ -120,4 +120,4 @@ sudo -v
 
 **Cursor not launching:**
 - Verify AppImage permissions: `ls -la /opt/cursor/`
-- Try: `/opt/cursor/cursor.AppImage` 
+- Try: `/opt/cursor/cursor.AppImage`
