@@ -91,6 +91,42 @@ def get_role_reminders(role_name: str) -> str:
     return ""
 
 
+def get_mcp_server_reminders():
+    """Get reminders for enabled MCP servers from global variables."""
+    try:
+        # Load the global vars file
+        vars_file = Path("ansible/group_vars/all.yml")
+        if vars_file.exists():
+            vars_data = yaml.safe_load(vars_file.read_text()) or {}
+            mcp_servers_list = vars_data.get("mcp_servers_list", [])
+            reminders = []
+            
+            # Add individual server reminders
+            for server in mcp_servers_list:
+                if server.get("enabled", False) and server.get("reminder"):
+                    reminders.append({
+                        "name": server["name"],
+                        "reminder": server["reminder"]
+                    })
+            
+            # Add general MCP server reminder if any servers are enabled
+            enabled_servers = [server for server in mcp_servers_list if server.get("enabled", False)]
+            if enabled_servers:
+                mcp_servers_general = vars_data.get("mcp_servers_general", {})
+                general_reminder = mcp_servers_general.get("reminder", "")
+                if general_reminder:
+                    reminders.append({
+                        "name": "MCP Servers",
+                        "reminder": general_reminder
+                    })
+            
+            return reminders
+    except Exception:
+        pass
+    
+    return []
+
+
 def load_config():
     """Load configuration from config.yml, or return an empty selection map.
 
@@ -170,6 +206,12 @@ def display_reminders(config):
         reminder = get_role_reminders(component)
         if reminder:
             print(f"🔔 {component.replace('_', ' ').title()}: {reminder}")
+    
+    # Show MCP server reminders if cursor role is enabled
+    if config.get("cursor", False):
+        mcp_reminders = get_mcp_server_reminders()
+        for server in mcp_reminders:
+            print(f"🔔 {server['name']}: {server['reminder']}")
 
 def main():
     """Main configuration function"""

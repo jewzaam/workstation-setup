@@ -165,3 +165,60 @@
   ansible.builtin.file:
     path: "{{ cursor_temp_dir.path }}"
     state: absent
+
+# MCP Servers installation
+- name: Create MCP servers base directory
+  ansible.builtin.file:
+    path: "{{ mcp_servers_general.base_dir }}"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Check if MCP server directory exists
+  ansible.builtin.stat:
+    path: "{{ mcp_servers_general.base_dir }}/{{ item.name }}"
+  register: cursor_mcp_server_dir
+  loop: "{{ mcp_servers_list | selectattr('enabled', 'equalto', true) | list }}"
+  when: mcp_servers_list is defined
+
+- name: Clone MCP server repository
+  ansible.builtin.git:
+    repo: "{{ item.item.repo }}"
+    dest: "{{ mcp_servers_general.base_dir }}/{{ item.item.name }}"
+    version: "{{ item.item.branch }}"
+    force: false
+  become: true
+  loop: "{{ cursor_mcp_server_dir.results | selectattr('stat.exists', 'equalto', false) | list }}"
+  when: mcp_servers_list is defined
+
+- name: Update MCP server repository
+  ansible.builtin.git:
+    repo: "{{ item.repo }}"
+    dest: "{{ mcp_servers_general.base_dir }}/{{ item.name }}"
+    version: "{{ item.branch }}"
+    force: false
+  become: true
+  loop: "{{ mcp_servers_list | selectattr('enabled', 'equalto', true) | list }}"
+  when: mcp_servers_list is defined
+
+- name: Change ownership of MCP server directories to user
+  ansible.builtin.file:
+    path: "{{ mcp_servers_general.base_dir }}/{{ item.name }}"
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    recurse: true
+  become: true
+  loop: "{{ mcp_servers_list | selectattr('enabled', 'equalto', true) | list }}"
+  when: mcp_servers_list is defined
+
+- name: Install MCP server
+  ansible.builtin.command: "{{ item.install_command }}"
+  args:
+    chdir: "{{ mcp_servers_general.base_dir }}/{{ item.name }}"
+  environment:
+    PATH: "{{ mcp_servers_general.base_dir }}/{{ item.name }}/venv/bin:{{ ansible_env.PATH }}"
+  register: cursor_mcp_install_result
+  failed_when: cursor_mcp_install_result.rc != 0
+  changed_when: cursor_mcp_install_result.rc == 0
+  loop: "{{ mcp_servers_list | selectattr('enabled', 'equalto', true) | list }}"
+  when: mcp_servers_list is defined
