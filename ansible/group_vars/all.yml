@@ -172,6 +172,24 @@ claude_code_version: "stable"
 # Control auto-updates. If false, we disable via config and env during install
 claude_code_auto_updates: true
 
+# MCP Servers configuration
+mcp_servers_general:
+  base_dir: "/opt/mcp-servers"
+  # reminder: "Restart Cursor to detect newly installed MCP servers. For updates, restart Cursor or restart MCP servers within Cursor."
+mcp_servers_list:
+  - name: "mcp-location-server"
+    repo: "https://github.com/jewzaam/mcp-location-server.git"
+    branch: "main"
+    install_command: "make install-cursor"
+    install_directory: ""  # Optional, defaults to cloned directory
+    enabled: true
+  - name: "mcp-cursor-allowlist"
+    repo: "https://github.com/jewzaam/mcp-cursor-allowlist.git"
+    branch: "main"
+    install_command: "make install-cursor"
+    install_directory: ""  # Optional, defaults to cloned directory
+    enabled: true
+
 # Samba file sharing configuration
 samba_enabled: true
 samba_share_name: "{{ ansible_hostname }}-shared"
