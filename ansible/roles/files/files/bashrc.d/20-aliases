@@ -3,7 +3,6 @@
 # This file is managed by ansible - user customizations go in ~/.bashrc.d/99-user
 
 alias vi='vim -p'
-#alias mvn="`which mvn | tail -n 1 | awk '{print $1}'` -Dmaven.junit.fork=no -Dmaven.rpm.forceRPMBuild=true"
 alias pjson="python -mjson.tool"
 alias pxml="xmllint --format -"
 alias sjson="python -c 'import json,sys; print json.dumps(json.load(sys.stdin), sort_keys=True)'"

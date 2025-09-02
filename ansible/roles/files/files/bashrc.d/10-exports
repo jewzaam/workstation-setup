@@ -6,7 +6,6 @@ export HISTTIMEFORMAT="%Y/%m/%d %T "
 export GOPATH=`go env GOPATH`
 export GOROOT=`go env GOROOT`
 export PATH=~/bin:$PATH:~/Downloads/google-cloud-sdk/bin/:~/.local/bin:$GOPATH/bin
-#export PATH=${HOME}/.local/bin/backplane/latest:${PATH}
 
 # make vi alias default editor
 export EDITOR=vi

@@ -17,11 +17,11 @@
         value: "false"
         state: present
 
-    - name: Set session idle delay to never (0)
-      community.general.dconf:
-        key: "/org/gnome/desktop/session/idle-delay"
-        value: "uint32 0"
-        state: present
+#    - name: Set session idle delay to never (0)
+#      community.general.dconf:
+#        key: "/org/gnome/desktop/session/idle-delay"
+#        value: "uint32 0"
+#        state: present
 
     - name: Disable automatic suspend
       community.general.dconf:
