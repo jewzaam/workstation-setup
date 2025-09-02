@@ -40,7 +40,6 @@ Automated VM workstation setup using Ansible. Installs packages, deploys files, 
 
 ### Files Deployed
 - `.bashrc` - Custom bash configuration with Go environment
-- `.bashrc_prompt` - Color prompt configuration
 - `.vimrc` - Vim editor configuration with Ruby/YAML support
 - `.screenrc` - GNU Screen configuration
 - `bin/trim` - Utility script to remove trailing whitespace from files
@@ -77,7 +76,6 @@ ansible/
     │   ├── tasks/main.yml
     │   └── files/                  # Source dotfiles (no dot prefix)
     │       ├── bashrc
-    │       ├── bashrc_prompt
     │       ├── vimrc
     │       ├── screenrc
     │       ├── bin/
