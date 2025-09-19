@@ -62,13 +62,32 @@
   become: true
   when: cursor_download is succeeded
 
-- name: Create command line symlink for Cursor
+- name: Install Cursor CLI
+  ansible.builtin.shell: |
+    curl https://cursor.com/install -fsS | bash
+  args:
+    creates: "{{ ansible_env.HOME }}/.local/bin/cursor"
+  register: cursor_cli_install
+  failed_when: false  # Don't fail if CLI install fails, fallback to symlink
+  when: 
+    - cursor_download is succeeded
+    - cursor_install_cli | default(true)
+
+- name: Check if CLI was installed successfully
+  ansible.builtin.stat:
+    path: "{{ ansible_env.HOME }}/.local/bin/cursor"
+  register: cursor_cli_exists
+  when: cursor_install_cli | default(true)
+
+- name: Create command line symlink for Cursor (fallback if CLI not installed)
   ansible.builtin.file:
     src: "{{ cursor_install_dir }}/cursor.AppImage"
     dest: "/usr/local/bin/cursor"
     state: link
   become: true
-  when: cursor_download is succeeded
+  when: 
+    - cursor_download is succeeded
+    - not (cursor_install_cli | default(true) and cursor_cli_exists.stat.exists | default(false))
 
 - name: Update desktop database
   ansible.builtin.command: update-desktop-database /usr/share/applications/
