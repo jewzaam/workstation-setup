@@ -36,7 +36,7 @@ Automated VM workstation setup using Ansible. Installs packages, deploys files, 
 ### Packages
 - **Essential tools**: python3, git, vim, screen, curl, wget
 - **Development**: golang, meld, tig
-- **Cursor**: AI-powered code editor (AppImage)
+- **Cursor**: AI-powered code editor (AppImage + CLI)
 
 ### Files Deployed
 - `.bashrc` - Custom bash configuration with Go environment

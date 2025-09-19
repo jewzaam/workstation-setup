@@ -112,7 +112,7 @@ make run TAGS=samba
 ### Core Components (Default)
 - **Development**: python3, golang, git, vim, meld, tig
 - **System**: screen, curl, wget  
-- **Editor**: Cursor (AI-powered code editor)
+- **Editor**: Cursor (AI-powered code editor with CLI)
 - **Configuration**: .bashrc, .vimrc, .screenrc, git config
 - **GNOME**: Optimized for remote access performance
 
