@@ -12,8 +12,19 @@
     path: "{{ cursor_install_dir }}"
     state: directory
     mode: "0755"
-  become: true
   when: not cursor_installed.stat.exists
+
+- name: Create local applications directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/.local/share/applications"
+    state: directory
+    mode: "0755"
+
+- name: Create local pixmaps directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/.local/share/pixmaps"
+    state: directory
+    mode: "0755"
 
 - name: Get Cursor download URL from API
   ansible.builtin.uri:
@@ -31,7 +42,6 @@
     timeout: 300
     headers:
       User-Agent: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
-  become: true
   when: not cursor_installed.stat.exists
   register: cursor_download
 
@@ -41,7 +51,6 @@
     dest: "{{ cursor_icon_file }}"
     mode: "0644"
     timeout: 60
-  become: true
   when: not cursor_installed.stat.exists
 
 - name: Create Cursor desktop entry
@@ -59,20 +68,23 @@
       StartupWMClass=cursor
     dest: "{{ cursor_desktop_file }}"
     mode: "0644"
-  become: true
   when: cursor_download is succeeded
+
+- name: Create user bin directory for symlink
+  ansible.builtin.file:
+    path: "{{ user_home }}/.local/bin"
+    state: directory
+    mode: "0755"
 
 - name: Create command line symlink for Cursor
   ansible.builtin.file:
     src: "{{ cursor_install_dir }}/cursor.AppImage"
-    dest: "/usr/local/bin/cursor"
+    dest: "{{ user_home }}/.local/bin/cursor"
     state: link
-  become: true
   when: cursor_download is succeeded
 
 - name: Update desktop database
-  ansible.builtin.command: update-desktop-database /usr/share/applications/
-  become: true
+  ansible.builtin.command: update-desktop-database {{ user_home }}/.local/share/applications/
   when: cursor_download is succeeded
   changed_when: true
 
