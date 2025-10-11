@@ -39,3 +39,5 @@
       tags: gnome-extensions
     - role: samba
       tags: samba
+    - role: ntpd
+      tags: ntpd

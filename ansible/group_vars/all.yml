@@ -25,6 +25,19 @@ ssh_packages:
 ssh_service: sshd
 ssh_firewall_service: ssh
 
+# NTP daemon configuration
+ntpd_packages:
+  - ntpsec
+
+ntpd_service: ntpd
+ntpd_firewall_service: ntp
+
+ntpd_servers:
+  - "0.pool.ntp.org"
+  - "1.pool.ntp.org"
+  - "2.pool.ntp.org"
+  - "3.pool.ntp.org"
+
 # NoMachine configuration
 nomachine_packages:
   - wget
@@ -211,6 +224,7 @@ role_reminders:
   samba: "run 'make samba-password' to set your Samba password"
   gnome_extensions: "logout and login again to apply all GNOME Extensions"
   files: "restart your terminal or run 'source ~/.bashrc'"
+  ntpd: "check 'ntpq -p' to verify NTP synchronization status"
 
 # GNOME favorites (dash) configuration
 gnome_favorite_apps:
