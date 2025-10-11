@@ -13,17 +13,3 @@
     state: present
   become: true
   register: packages_package_install_result
-
-- name: Enable flathub remote
-  ansible.builtin.command:
-    cmd: flatpak remote-modify --enable flathub
-  become: true
-  register: packages_flathub_enable_result
-  changed_when: packages_flathub_enable_result.rc == 0
-  failed_when: false
-
-- name: Install Obsidian via flatpak
-  community.general.flatpak:
-    name: md.obsidian.Obsidian
-    state: present
-    remote: flathub

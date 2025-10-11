@@ -21,6 +21,8 @@
   roles:
     - role: packages
       tags: packages
+    - role: obsidian
+      tags: obsidian
     - role: files
       tags: files
     - role: git
