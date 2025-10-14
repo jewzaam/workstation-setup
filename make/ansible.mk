@@ -1,7 +1,7 @@
 # Ansible Operations Targets
 # ==========================
 
-.PHONY: collections run run-debug run-ntpd
+.PHONY: collections run run-debug run-cursor run-ntpd
 
 collections: pip-install-dev ## Install required Ansible collections locally
 	@ansible-galaxy collection install -r $(ANSIBLE_DIR)/requirements.yml -p $(COLLECTIONS_DIR)
@@ -21,9 +21,14 @@ run-debug: collections ## Run setup with verbose debugging output
 	@echo "✅ Debug run complete!"
 	@$(PYTHON) configure.py --reminders
 
+run-cursor: collections ## Run only the cursor role for Cursor installation
+	@ansible-playbook --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags cursor
+	@ansible-playbook -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags cursor --ask-become-pass
+	@echo ""
+	@echo "✅ Cursor setup complete!"
+
 run-ntpd: collections ## Run only the ntpd role for NTP configuration
 	@ansible-playbook --syntax-check -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags ntpd
 	@ansible-playbook -i $(INVENTORY) -c $(CONNECTION) $(PLAYBOOK) --tags ntpd --ask-become-pass
 	@echo ""
 	@echo "✅ NTP daemon setup complete!"
-	@echo "🔔 ntpd: check 'ntpq -p' to verify NTP synchronization status"
