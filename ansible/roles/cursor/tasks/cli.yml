@@ -16,7 +16,10 @@
 
 - name: Determine if installation is needed
   ansible.builtin.set_fact:
-    cursor_cli_needs_install: "{{ cursor_cli_check.rc != 0 or (cursor_agent_pin_version and cursor_agent_version not in (cursor_cli_check.stdout | default(''))) }}"
+    cursor_cli_needs_install: >-
+      {{ cursor_cli_check.rc != 0 or
+      (cursor_agent_pin_version and cursor_agent_version not in
+      (cursor_cli_check.stdout | default(''))) }}
   when: cursor_install_cli | default(true)
 
 - name: Display current cursor-agent status
@@ -40,31 +43,35 @@
 
 - name: Get current version from installer script (for pinned version)
   ansible.builtin.shell: |
+    set -o pipefail
     grep -oP '(?<=versions/)[0-9]{4}\.[0-9]{2}\.[0-9]{2}-[a-f0-9]+' /tmp/cursor-cli-install-original.sh | head -1
-  register: installer_current_version
+  args:
+    executable: /bin/bash
+  register: cursor_installer_current_version
   changed_when: false
   when:
     - cursor_install_cli | default(true)
     - cursor_cli_download is succeeded
     - cursor_agent_pin_version
 
-- name: Modify installer script to use pinned version
+- name: Modify installer script to use pinned version  # noqa: command-instead-of-module
   ansible.builtin.shell: |
-    sed "s/{{ installer_current_version.stdout }}/{{ cursor_agent_version }}/g" \
+    sed "s/{{ cursor_installer_current_version.stdout }}/{{ cursor_agent_version }}/g" \
       /tmp/cursor-cli-install-original.sh > /tmp/cursor-cli-install.sh
     chmod +x /tmp/cursor-cli-install.sh
+  changed_when: true
   when:
     - cursor_install_cli | default(true)
     - cursor_cli_download is succeeded
     - cursor_agent_pin_version
-    - installer_current_version.stdout is defined
+    - cursor_installer_current_version.stdout is defined
 
 - name: Use unmodified installer for latest version
   ansible.builtin.copy:
     src: /tmp/cursor-cli-install-original.sh
     dest: /tmp/cursor-cli-install.sh
     mode: '0755'
-    remote_src: yes
+    remote_src: true
   when:
     - cursor_install_cli | default(true)
     - cursor_cli_download is succeeded
@@ -113,7 +120,10 @@
 
 - name: Log CLI installation result
   ansible.builtin.debug:
-    msg: "Cursor CLI {{ cursor_agent_version }} installed successfully: {{ cursor_cli_verify.stdout }}{{ ' (pinned via bashrc alias)' if cursor_agent_pin_version else '' }}"
+    msg: >-
+      Cursor CLI {{ cursor_agent_version }} installed successfully:
+      {{ cursor_cli_verify.stdout }}{{ ' (pinned via bashrc alias)'
+      if cursor_agent_pin_version else '' }}
   when:
     - cursor_install_cli | default(true)
     - cursor_cli_verify is defined
