@@ -51,7 +51,7 @@
   changed_when: false
   when:
     - cursor_install_cli | default(true)
-    - cursor_cli_download is succeeded
+    - cursor_cli_needs_install
     - cursor_agent_pin_version
 
 - name: Modify installer script to use pinned version  # noqa: command-instead-of-module
@@ -62,7 +62,7 @@
   changed_when: true
   when:
     - cursor_install_cli | default(true)
-    - cursor_cli_download is succeeded
+    - cursor_cli_needs_install
     - cursor_agent_pin_version
     - cursor_installer_current_version.stdout is defined
 
@@ -74,7 +74,7 @@
     remote_src: true
   when:
     - cursor_install_cli | default(true)
-    - cursor_cli_download is succeeded
+    - cursor_cli_needs_install
     - not cursor_agent_pin_version
 
 - name: Execute Cursor CLI installer
