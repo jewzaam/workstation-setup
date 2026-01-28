@@ -8,4 +8,12 @@ if [ -d "$HOME/.local/bin" ] && [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     export PATH="$HOME/.local/bin:$PATH"
 fi
 
-alias code='cursor'
+# Pin cursor-agent to specific version if configured
+# This prevents auto-updates by directly calling the versioned binary
+if [ -f "$HOME/.config/cursor-agent/pinned-version" ]; then
+    PINNED_VERSION=$(cat "$HOME/.config/cursor-agent/pinned-version")
+    if [ -f "$HOME/.local/share/cursor-agent/versions/$PINNED_VERSION/cursor-agent" ]; then
+        alias cursor-agent="$HOME/.local/share/cursor-agent/versions/$PINNED_VERSION/cursor-agent"
+    fi
+fi
+
