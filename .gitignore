@@ -79,7 +79,7 @@ scratch/
 notes.txt
 
 # User configuration
-config.yml
+/config.yml
 
 # GPG files - private keys and certificates
 *.gpg
