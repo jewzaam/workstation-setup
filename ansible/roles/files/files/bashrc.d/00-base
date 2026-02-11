@@ -2,10 +2,13 @@
 # .bashrc.d/00-base - Core system initialization
 # This file is managed by ansible - user customizations go in ~/.bashrc.d/99-user
 
-# Source global definitions
+# Source global definitions (Linux)
 if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
 fi
 
 # http://unix.stackexchange.com/questions/72086/ctrl-s-hang-terminal-emulator
-stty -ixon
+# stty works in Git Bash on Windows but only when running in a real terminal
+if [ -t 0 ]; then
+    stty -ixon
+fi

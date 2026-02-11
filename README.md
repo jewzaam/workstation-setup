@@ -224,6 +224,69 @@ See `VM-Management.md` for detailed SPICE tunneling setup.
 
 **Note**: The share uses PAM authentication, so use your system username and password when prompted.
 
+## Windows 11 Compatibility
+
+This project is designed for Red Hat family Linux distributions (Fedora, RHEL, CentOS). The Ansible playbook **cannot run on Windows** -- Ansible does not support Windows as a local control node, and the playbook uses Linux-specific modules (`dnf`, `systemd`, `firewalld`, SELinux, GNOME/dconf).
+
+However, several pieces of this project can be reused on Windows 11 with Git Bash.
+
+### What works on Windows 11 + Git Bash
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| **Dotfiles** (.bashrc, .bashrc.d/*) | Works | Sourced by Git Bash automatically if placed in `$HOME` |
+| **Git configuration** (aliases, colors) | Works | Run `git config` commands manually or via a script |
+| **bin/remote-add** | Works | Uses git commands available in Git Bash |
+| **bin/trim** | Works | Uses sed, available in Git Bash |
+| **configure.py / make configure** | Works | Requires Python 3 and `make` (install via `choco install make`) |
+| **make lint** | Works | Requires Python 3 in PATH |
+| **Cursor IDE** | Works | Install Cursor for Windows directly from cursor.com |
+| **Claude Code** | Works | Install via `npm install -g @anthropic-ai/claude-code` on Windows |
+
+### What does NOT work on Windows 11
+
+| Component | Reason |
+|-----------|--------|
+| **make run** (Ansible playbook) | Ansible requires Linux; uses dnf, systemd, firewalld |
+| **packages role** | Uses `dnf` package manager (Fedora/RHEL only) |
+| **system_config role** | GNOME desktop, dconf, gsettings are Linux-only |
+| **gnome_extensions role** | GNOME Shell is Linux-only |
+| **ssh role** | Uses systemd and firewalld for service management |
+| **nomachine role** | Downloads Linux RPM; use NoMachine Windows installer instead |
+| **samba role** | SELinux contexts, systemd services; Windows has native SMB |
+| **ntpd role** | Linux NTP daemon; Windows uses Windows Time Service |
+| **screen/screenrc** | GNU Screen is not available in Git Bash |
+| **bin/samba-password** | Requires smbpasswd, pdbedit (Linux Samba tools) |
+
+### Manual setup on Windows 11 with Git Bash
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/jewzaam/workstation-setup
+cd workstation-setup
+
+# 2. Copy dotfiles to your Git Bash home directory
+cp ansible/roles/files/files/bashrc ~/.bashrc
+cp ansible/roles/files/files/vimrc ~/.vimrc
+mkdir -p ~/.bashrc.d
+cp ansible/roles/files/files/bashrc.d/* ~/.bashrc.d/
+mkdir -p ~/bin
+cp ansible/roles/files/files/bin/remote-add ~/bin/
+cp ansible/roles/files/files/bin/trim ~/bin/
+
+# 3. Apply git configuration manually
+git config --global push.default simple
+git config --global core.autocrlf true   # Note: 'true' is typical for Windows
+git config --global core.editor vim
+git config --global alias.lol 'log --graph --decorate --pretty=oneline --abbrev-commit'
+git config --global alias.lola 'log --graph --decorate --pretty=oneline --abbrev-commit --all'
+git config --global color.ui true
+git config --global pull.ff only
+git config --global init.defaultBranch main
+
+# 4. Restart Git Bash to pick up the new .bashrc
+```
+
 ## Requirements Reference
 
 **Original automation requirements:**
