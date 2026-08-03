@@ -8,8 +8,8 @@ include make/lint.mk
 include make/config.mk
 include make/samba.mk
 
-.DEFAULT_GOAL := help
-.PHONY: help
+.DEFAULT_GOAL := check
+.PHONY: help check
 
 # Variables
 ANSIBLE_DIR := ansible
@@ -38,6 +38,8 @@ RESET := \033[0m
 export PATH := $(CURDIR)/$(VENV_DIR)/bin:$(PATH)
 export ANSIBLE_CONFIG := $(CURDIR)/$(ANSIBLE_DIR)/ansible.cfg
 export ANSIBLE_COLLECTIONS_PATH := $(COLLECTIONS_DIR)
+
+check: lint ## Run full quality gate
 
 help: ## Display this help message
 	@echo "VM Workstation Setup - Ansible Playbook"
