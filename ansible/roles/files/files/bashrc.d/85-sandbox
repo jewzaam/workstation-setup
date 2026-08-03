@@ -1,0 +1,22 @@
+# .bashrc.d/85-sandbox - Sandbox profile indicator for PS1
+# This file is managed by ansible - user customizations go in ~/.bashrc.d/99-user
+
+# Returns colored sandbox profile tag when CWD is under ~/sandboxes/<name>/.
+# Empty output when not in a sandbox directory — no prompt clutter.
+# Called from PS1 in 90-prompt via $(__sandbox_ps1).
+__sandbox_ps1() {
+    if [[ "$PWD" != "$HOME/sandboxes/"* ]]; then
+        printf '\x01\033[0;37m\x02[local]\x01\033[0m\x02 '
+        return
+    fi
+    local name="${PWD#$HOME/sandboxes/}"
+    name="${name%%/*}"
+    local manifest="$HOME/sandboxes/${name}/manifest.json"
+    local profile
+    profile=$(jq -r '.profile // empty' "$manifest" 2>/dev/null)
+    if [[ "$profile" == "personal" ]]; then
+        printf '\x01\033[1;35m\x02[sb-personal]\x01\033[0m\x02 '
+    else
+        printf '\x01\033[0;33m\x02[sb-work]\x01\033[0m\x02 '
+    fi
+}
