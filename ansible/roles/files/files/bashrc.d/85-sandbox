@@ -14,9 +14,11 @@ __sandbox_ps1() {
     local manifest="$HOME/sandboxes/${name}/manifest.json"
     local profile
     profile=$(jq -r '.profile // empty' "$manifest" 2>/dev/null)
-    if [[ "$profile" == "personal" ]]; then
-        printf ' %s[sb-personal]%s' "$PS1F_SANDBOX_PERSONAL" "$PS1F_RESET"
-    else
-        printf ' %s[sb-work]%s' "$PS1F_SANDBOX_WORK" "$PS1F_RESET"
+    # personal and home share credentials and colour (openshell-sandbox
+    # lib.sh personal_profile); unknown/unreadable falls back to work.
+    local color=$PS1F_SANDBOX_WORK
+    if [[ "$profile" == "personal" || "$profile" == "home" ]]; then
+        color=$PS1F_SANDBOX_PERSONAL
     fi
+    printf ' %s[sb-%s]%s' "$color" "${profile:-work}" "$PS1F_RESET"
 }
