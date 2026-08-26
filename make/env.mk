@@ -3,15 +3,25 @@
 
 .PHONY: venv uv pip-install-dev clean
 
+# Detect Python command (python3 on Linux/macOS, python on Windows/Git Bash)
+PYTHON3 := $(shell command -v python3 2>/dev/null || command -v python 2>/dev/null)
+
+# Detect OS for path differences (MSYS/Git Bash on Windows sets MSYSTEM)
+ifdef MSYSTEM
+  VENV_BIN := $(VENV_DIR)/Scripts
+else
+  VENV_BIN := $(VENV_DIR)/bin
+endif
+
 venv: ## Create Python virtual environment
 	@if [ ! -d "$(VENV_DIR)" ]; then \
 		printf "$(BLUE)Creating virtual environment...$(RESET)\n"; \
-		python3 -m venv $(VENV_DIR); \
+		$(PYTHON3) -m venv $(VENV_DIR); \
 		printf "$(GREEN)✅ Virtual environment created$(RESET)\n"; \
 	fi
 
 uv: venv ## Install uv package manager
-	@if [ ! -f "$(VENV_DIR)/bin/uv" ]; then \
+	@if [ ! -f "$(VENV_BIN)/uv" ] && [ ! -f "$(VENV_BIN)/uv.exe" ]; then \
 		printf "$(BLUE)Installing uv...$(RESET)\n"; \
 		$(PYTHON) -m ensurepip --upgrade; \
 		$(PYTHON) -m pip install uv; \

@@ -3,9 +3,15 @@
 # This file is managed by ansible - user customizations go in ~/.bashrc.d/99-user
 
 export HISTTIMEFORMAT="%Y/%m/%d %T "
-export GOPATH=`go env GOPATH`
-export GOROOT=`go env GOROOT`
-export PATH=~/bin:$PATH:~/Downloads/google-cloud-sdk/bin/:~/.local/bin:$GOPATH/bin
+
+# Go environment (only if go is installed)
+if command -v go >/dev/null 2>&1; then
+    export GOPATH=$(go env GOPATH)
+    export GOROOT=$(go env GOROOT)
+    export PATH=$PATH:$GOPATH/bin
+fi
+
+export PATH=~/bin:$PATH:~/.local/bin
 
 # make vi alias default editor
 export EDITOR=vi
@@ -15,8 +21,19 @@ export EDITOR=vi
 
 # set so sqldeveloper works for OCI
 export NLS_LANG=AMERICA_AMERICAN.AL32UTF8
-export JAVA_HOME=/etc/alternatives/java_sdk
+
+# Java home (Linux-specific path)
+if [ -d /etc/alternatives/java_sdk ]; then
+    export JAVA_HOME=/etc/alternatives/java_sdk
+fi
 
 export PYTHONDONTWRITEBYTECODE=1
 
-export PATH=~/.npm-global/bin:$PATH
+if [ -d ~/.npm-global/bin ]; then
+    export PATH=~/.npm-global/bin:$PATH
+fi
+
+# Google Cloud SDK (if present)
+if [ -d ~/Downloads/google-cloud-sdk/bin ]; then
+    export PATH=$PATH:~/Downloads/google-cloud-sdk/bin
+fi

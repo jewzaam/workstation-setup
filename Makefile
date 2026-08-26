@@ -21,9 +21,17 @@ LIMIT ?=
 
 # Python virtual environment
 VENV_DIR ?= .venv
-PYTHON := $(VENV_DIR)/bin/python
-PIP := $(VENV_DIR)/bin/pip
-UV := $(VENV_DIR)/bin/uv
+
+# Detect MSYS/Git Bash on Windows (Scripts vs bin)
+ifdef MSYSTEM
+  PYTHON := $(VENV_DIR)/Scripts/python
+  PIP := $(VENV_DIR)/Scripts/pip
+  UV := $(VENV_DIR)/Scripts/uv
+else
+  PYTHON := $(VENV_DIR)/bin/python
+  PIP := $(VENV_DIR)/bin/pip
+  UV := $(VENV_DIR)/bin/uv
+endif
 
 # Project-local Ansible collections location
 COLLECTIONS_DIR := $(CURDIR)/collections
@@ -35,7 +43,11 @@ YELLOW := \033[33m
 RESET := \033[0m
 
 # Export common environment for all recipes
-export PATH := $(CURDIR)/$(VENV_DIR)/bin:$(PATH)
+ifdef MSYSTEM
+  export PATH := $(CURDIR)/$(VENV_DIR)/Scripts:$(PATH)
+else
+  export PATH := $(CURDIR)/$(VENV_DIR)/bin:$(PATH)
+endif
 export ANSIBLE_CONFIG := $(CURDIR)/$(ANSIBLE_DIR)/ansible.cfg
 export ANSIBLE_COLLECTIONS_PATH := $(COLLECTIONS_DIR)
 
