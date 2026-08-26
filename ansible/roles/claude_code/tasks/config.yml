@@ -19,6 +19,23 @@
     backup: false
     force: "{{ claude_code_config_force_update | default(false) }}"
 
+- name: Merge repo settings into global settings.json
+  ansible.builtin.command:
+    cmd: >
+      python3 {{ role_path }}/files/merge_claude_settings.py
+      {{ role_path }}/files/claude/settings.json
+      {{ user_home }}/.claude/settings.json
+  register: merge_result
+  changed_when: true
+  failed_when: merge_result.rc != 0
+
+- name: Set ownership and permissions on merged settings.json
+  ansible.builtin.file:
+    path: "{{ user_home }}/.claude/settings.json"
+    mode: '0644'
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+
 - name: Create Claude Code skills directory
   ansible.builtin.file:
     path: "{{ user_home }}/.claude/skills"
